@@ -1,0 +1,11 @@
+sh:/home/*/.cache
+sh:**/CacheStorage
+sh:**/CacheStorage
+sh:**/node_modules
+sh:**/vendor
+sh:**/blob_storage
+sh:**/Cache
+sh:**/CachedData
+sh:**/CachedExtensions
+sh:**/Code Cache
+sh:**/GPUCache
