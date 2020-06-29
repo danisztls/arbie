@@ -1,7 +1,7 @@
 #!/bin/bash
 # CONF
 share=$HOME/.local/share/arb
-systemd=$HOME/.local/share/systemd/user
+systemd=$HOME/.config/systemd/user
 
 script=$(readlink -f $0) # absolute script path
 src=`dirname "$script"` # absolute source files path
