@@ -64,7 +64,7 @@ source "$HOME/.local/share/arb/arb.config" # load config variables
 
 # System Archive
 echo "`date +"[%b %d %H:%M:%S]"` archive: system archiving started"
-archiveSys "$system" "$system_exclude" & child=$! && wait $child
+archiveSys "$system_repo" "$system_exclude" & child=$! && wait $child
 echo "`date +"[%b %d %H:%M:%S]"` archive: system archiving ended"
 
 # Borg Archive
