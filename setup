@@ -1,8 +1,9 @@
 #!/bin/bash
-# Install program to Home
+# Install program to user home
 
-share=$HOME/.local/share/arb
-systemd=$HOME/.config/systemd/user
+bin="$HOME/.local/bin"
+share="$HOME/.local/share/arb"
+systemd="$HOME/.config/systemd/user"
 script=$(readlink -f "$0") # absolute script path
 src=$(dirname "$script") # absolute source files path
 
@@ -10,8 +11,8 @@ deps=(borg git gocryptfs pass rclone rsync) # dependencies
 
 installMany() {
     toInstall=()
-    for pkg; do pacman -Qi "$pkg" &> /dev/null || toInstall+=("${pkg}"); done # select pkgs not already installed
-    [[ "${toInstall[*]}" == "" ]] || ( sudo pacman -Syu && sudo pacman -S "${toInstall[*]}" ) # install select pkgs if any
+    for pkg; do pacman -Qi "$pkg" &> /dev/null || toInstall+=("$pkg"); done # select pkgs not already installed
+    [[ "${toInstall[*]}" == "" ]] || ( sudo pacman -Syu && sudo pacman -S "${toInstall[@]}" ) # install select pkgs if any
 }
 
 if [ "$#" -ne 1 ]; then # HELP
@@ -20,13 +21,15 @@ fi
 
 if [ "$1" == install ]; then # INSTALL
     installMany "${deps[@]}" # install pkgs
-    mkdir -p "$share" && rsync -r --exclude={'arb.timer','arb.service','.git','.gitignore'} "$src/" "$share/" # copy program files
+    mkdir -p "$share" && rsync -r --exclude={'arb.sh','arb.timer','arb.service','.git','.gitignore'} "$src/" "$share/" # copy program data
+    mkdir -p "$bin" && rsync -r "$src/arb" "$bin/arb" # copy program binary
     mkdir -p "$systemd" && cp "$src/arb.service" "$systemd/" && cp "$src/arb.timer" "$systemd/" && systemctl --user daemon-reload # setup systemd
     exit 0
 fi
 
 if [ "$1" == unistall ]; then # UNINSTALL
-    rm -rf "$share" # remove program files
+    rm -rf "$share" # remove program data
+    rm -f "$bin/arb" # remove program binary
     systemctl --user stop arb && systemctl --user disable arb && systemctl --user disable arb.timer # disable arb
     rm -f "$systemd/arb.service" && rm -f "$systemd/arb.timer" && systemctl --user daemon-reload # remove from systemd
     exit 0

@@ -4,4 +4,4 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/.local/share/arb/arb.sh
+ExecStart=%h/.local/bin/arb
