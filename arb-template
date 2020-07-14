@@ -38,7 +38,7 @@ function archiveBorg() { # archiveBorg $borg_repo $borg_exclude $src $borg_pass 
 	[ "$4" ] && export BORG_PASSCOMMAND="pass $4"
 	[ "$5" ] && export BORG_KEY_FILE="$5"
 	borg create -s -x -C lz4 --exclude-from "$2" "::{user}-{now:%y-%m-%d}" "$3" # archive
-	borg prune --list --keep-daily=7 --keep-weekly=4 # purge old
+	borg prune --list --keep-daily=7 --keep-weekly=4 --keep-monthly=6 # purge old
 }
 
 function archiveBorgLite() { # archiveBorg $borg_repo $borg_exclude $src $borg_pass (optional) $borg_key (optional)
