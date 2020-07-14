@@ -1,6 +1,6 @@
 [Unit]
 Description=Automatic Robust Backup
-Wants=network-online.target
+Wants=default.target
 
 [Service]
 Type=oneshot
