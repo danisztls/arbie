@@ -1,6 +1,6 @@
 [Unit]
 Description=Automatic Robust Backup
-Wants=default.target
+Wants=graphical-session.target
 
 [Service]
 Type=oneshot
