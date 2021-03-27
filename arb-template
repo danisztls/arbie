@@ -77,29 +77,11 @@ ctrl_c() {
     echo -e "\n$(date +"[%b %d %H:%M:%S]") error: program was manually terminated" && exit 1
 }
 
-source "$HOME/.local/share/arb/arb.config" # load config variables
+config="$HOME/.config/arb/config"
 
-# EDIT BELLOW
-# FIXME: Example scripts are not unmouting the encrypted dirs.
-
-# System Archive
-echo "$(date)+"[%b %d %H:%M:%S]") archive: system archiving started"
-archiveSys "$system_repo" "$system_exclude" & child=$! && wait $child
-echo "$(date +"[%b %d %H:%M:%S]") archive: system archiving ended"
-
-# Borg Archive
-echo "$(date +"[%b %d %H:%M:%S]") archive: repoName borg archiving started"
-archiveBorg "$name_repo" "$name_exclude" "$name_src" & child=$! && wait $child
-echo "$(date +"[%b %d %H:%M:%S]") archive: repoName borg archiving ended"
-
-# Repo Sync to Disk
-echo "$(date +"[%b %d %H:%M:%S]") sync: repoName syncing to disk started"
-syncDisk "$name_repo" "$name_rsync" & child=$! && wait $child
-echo "$(date +"[%b %d %H:%M:%S]") sync: repoName syncing to disk ended"
-
-# Repo Sync to Cloud
-echo "$(date +"[%b %d %H:%M:%S]") sync: repoName encrypted syncing to cloud started"
-mount="$repo_crypt" && mountCrypt "$name_repo" "$mount" "$name_pass" || exit 1
-for stream in "${name_rclone[@]}"; do syncCloud name "$name_repo" "$stream" & child=$! && wait $child; done
-echo "$(date +"[%b %d %H:%M:%S]") sync: repoName encrypted syncing to cloud ended"
+if [ -f "$config" ]; then # exit with config not found
+    source "$config"
+else
+    echo -e "\n$(date +"[%b %d %H:%M:%S]"): config file not found!" && exit 1
+fi
 
