@@ -29,7 +29,8 @@ syncDisk() { #args: $src $dst
 syncCloud() { # syncCloud $name $src $stream
 # Sync a dir to a cloud bucket
 	echo "$(date +"[%b %d %H:%M:%S]") sync: syncing $1 to $3"
-	rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 "$2/" "$3:$1/"
+	#rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 "$2/" "$3:$1/"
+	rclone sync -u --use-server-modtime --skip-links --fast-list -v "$2/" "$3:$1/"
 }
 
 archiveSys() { # args: $repo $exclude
