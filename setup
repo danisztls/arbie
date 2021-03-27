@@ -2,14 +2,14 @@
 # Install program to user home
 
 bin="$HOME/.local/bin"
-share="$HOME/.local/share/arb"
+config="$HOME/.config/arb"
 systemd="$HOME/.config/systemd/user"
 script=$(readlink -f "$0") # absolute script path
 src=$(dirname "$script") # absolute source files path
-
 deps=(borg git gocryptfs pass rclone rsync) # dependencies
 
 installMany() {
+# Install packages from a list
     toInstall=()
     for pkg; do pacman -Qi "$pkg" &> /dev/null || toInstall+=("$pkg"); done # select pkgs not already installed
     [[ "${toInstall[*]}" == "" ]] || ( sudo pacman -Syu && sudo pacman -S "${toInstall[@]}" ) # install select pkgs if any
@@ -19,19 +19,19 @@ if [ "$#" -ne 1 ]; then # HELP
     echo "Options are install and uninstall." && exit 1
 fi
 
-if [ "$1" == install ]; then # INSTALL
+# INSTALL
+if [ "$1" == install ]; then
     installMany "${deps[@]}" # install pkgs
-    mkdir -p "$share" && rsync -r --exclude={'arb.sh','arb.timer','arb.service','.git','.gitignore'} "$src/" "$share/" # copy program data
-    mkdir -p "$bin" && rsync -r "$src/arb" "$bin/arb" # copy program binary
-    mkdir -p "$systemd" && cp "$src/arb.service" "$systemd/" && cp "$src/arb.timer" "$systemd/" && systemctl --user daemon-reload # setup systemd
+    mkdir -p "$bin" && cp "$src/arb" "$bin/arb" # copy bin
+    mkdir -p "$config" && cp -n "$src/config" "$src/template.ignore" "$config/" # copy data (don't overwrite)
+    mkdir -p "$systemd" && cp "$src/arb.service" "$src/arb.timer" "$systemd/" && systemctl --user daemon-reload # setup systemd
     exit 0
 fi
 
-if [ "$1" == unistall ]; then # UNINSTALL
-    rm -rf "$share" # remove program data
-    rm -f "$bin/arb" # remove program binary
-    systemctl --user stop arb && systemctl --user disable arb && systemctl --user disable arb.timer # disable arb
-    rm -f "$systemd/arb.service" && rm -f "$systemd/arb.timer" && systemctl --user daemon-reload # remove from systemd
+# UNINSTALL
+if [ "$1" == unistall ]; then
+    rm -f "$bin/arb" # remove bins
+    systemctl --user stop arb && systemctl --user disable arb && systemctl --user disable arb.timer # disable service
+    rm -f "$systemd/arb.service" && rm -f "$systemd/arb.timer" && systemctl --user daemon-reload # remove service
     exit 0
 fi
-
