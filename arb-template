@@ -1,13 +1,18 @@
 #!/bin/bash
 # A.R.B. Automatic Robust Backup
 
-function umountCrypt() { # umountCrypt
-	([ -d "$mount" ] && fusermount -uz "$mount") || (echo "$(date +"[%b %d %H:%M:%S]") error: unmounting $mount failed"; return 1)
-	[ -n "$(ls -A "$mount")" ] || rm -r "$mount" # remove dir
+# LIB 
+# TODO: Automatically create unmount all dirs at /run/user/$uid/arb/ 
+umountCrypt() { # args: $mount
+# Unmount a Gocryptfs directory 
+	([ -d "$1" ] && fusermount -uz "$1") || (echo "$(date +"[%b %d %H:%M:%S]") error: unmounting $1 failed"; return 1)
+	[ -n "$(ls -A "$1")" ] || rm -r "$1" # remove dir if empty
 }
 
-function mountCrypt() { # mountCrypt $src $mount_point $pass $exclude (optional)
-	[ -d "$2" ] && [[ -n "$(ls -A "$2")" ]] && (echo "$(date +"[%b %d %H:%M:%S]") warning: $2 is already mounted, unmounting..."; (umountCrypt && sleep 2) || return 1) # unmount if already mounted
+# TODO: Automatically create a mount at /run/user/$uid/arb/repo_name 
+mountCrypt() { # args: $src $mount_point $pass $exclude(opt)
+# Mount a Gocryptfs directory
+	[ -d "$2" ] && [[ -n "$(ls -A "$2")" ]] && (echo "$(date +"[%b %d %H:%M:%S]") warning: $2 is already mounted, unmounting..."; (umountCrypt "$2" && sleep 2) || return 1) # unmount if already mounted
 	mkdir -p "$2" # make dir if inexistent
 	if [ "$4" ]; then # mount reverse encrypted
 		gocryptfs -extpass pass -extpass "$3" -exclude-from "$4" -reverse "$1" "$2"
@@ -16,16 +21,19 @@ function mountCrypt() { # mountCrypt $src $mount_point $pass $exclude (optional)
 	fi
 }
 
-function syncDisk() { # syncDisk $src $dst
+syncDisk() { #args: $src $dst
+# Sync a dir to disk
 	rsync -a --delete "$1" "$2"
 }
 
-function syncCloud() { # syncCloud $name $src $stream
+syncCloud() { # syncCloud $name $src $stream
+# Sync a dir to a cloud bucket
 	echo "$(date +"[%b %d %H:%M:%S]") sync: syncing $1 to $3"
 	rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 "$2/" "$3:$1/"
 }
 
-function archiveSys() { # archiveSys $repo $exclude
+archiveSys() { # args: $repo $exclude
+# Archive system confs 
 	mkdir -p "$1" # make dir if inexistent
 	pacman -Qqen > "$1/pkglist.txt" # export non-local pkg list
 	pacman -Qqem > "$1/pkglist-local.txt" # export local pkg list
@@ -33,15 +41,20 @@ function archiveSys() { # archiveSys $repo $exclude
 	git -C "$1" add -A && git -C "$1" commit -m "$(date +%Y-%m-%d)" # archive changes in git
 }
 
-function archiveBorg() { # archiveBorg $borg_repo $borg_exclude $src $borg_pass (optional) $borg_key (optional)
-	export BORG_REPO="$1"
+# TODO: Use etckeeper to archive system /etc
+# https://wiki.archlinux.org/index.php/Etckeeper 
+
+archiveBorg() { # args: $borg_repo $borg_exclude $src $borg_pass(opt) $borg_key(opt)
+# Archive a dir with borg (default)
+    export BORG_REPO="$1"
 	[ "$4" ] && export BORG_PASSCOMMAND="pass $4"
 	[ "$5" ] && export BORG_KEY_FILE="$5"
 	borg create -s -x -C lz4 --exclude-from "$2" "::{user}-{now:%y-%m-%d}" "$3" # archive
 	borg prune --list --keep-daily=7 --keep-weekly=4 --keep-monthly=6 # purge old
 }
 
-function archiveBorgLite() { # archiveBorg $borg_repo $borg_exclude $src $borg_pass (optional) $borg_key (optional)
+archiveBorgLite() { # $borg_repo $borg_exclude $src $borg_pass(opt) $borg_key(opt)
+    # Archive a dir with borg (higher compression and chunk granularity)
 	export BORG_REPO="$1"
 	[ "$4" ] && export BORG_PASSCOMMAND="pass $4"
 	[ "$5" ] && export BORG_KEY_FILE="$5"
@@ -49,6 +62,7 @@ function archiveBorgLite() { # archiveBorg $borg_repo $borg_exclude $src $borg_p
 	borg prune --list --keep-last=1 # purge old
 }
 
+# MAIN
 for pid in $(pidof -x arb); do # exit if already being executed
     if [ "$pid" != $$ ]; then
 	    echo "$(date +"[%b %d %H:%M:%S]") error: program is already running with PID $pid"
@@ -59,7 +73,7 @@ done
 trap ctrl_c INT # clean exit with ctrl+c
 ctrl_c() {
     kill -15 "$child" && wait "$child" # send SIGTERM to child process
-    [ "$mount" ] && umountCrypt # unmount last mount point
+    [ "$mount" ] && umountCrypt "$mount" # unmount last mount point
     echo -e "\n$(date +"[%b %d %H:%M:%S]") error: program was manually terminated" && exit 1
 }
 
