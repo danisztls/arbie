@@ -3,6 +3,7 @@ Description=Automatic Robust Backup
 
 [Timer]
 OnCalendar=daily
+#OnCalendar=*-*-* 12:00:00
 Persistent=true
 
 [Install]
