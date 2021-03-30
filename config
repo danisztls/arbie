@@ -17,25 +17,14 @@ home_rclone=(nextcloud onedrive amazons3)   # rclone destination streams
 
 # TASKS
 # System Archive
-echo "$(date)+"[%b %d %H:%M:%S]") archive: system archiving started"
 archiveSys "$system_repo" "$system_exclude" & child=$! && wait $child
-echo "$(date +"[%b %d %H:%M:%S]") archive: system archiving ended"
 
 # Borg Archive
-echo "$(date +"[%b %d %H:%M:%S]") archive: home borg archiving started"
 archiveBorg "$home_repo" "$home_exclude" "$home_src" & child=$! && wait $child
-echo "$(date +"[%b %d %H:%M:%S]") archive: home borg archiving ended"
 
 # Repo Sync to Disk
-echo "$(date +"[%b %d %H:%M:%S]") sync: home syncing to disk started"
 syncDisk "$home_repo" "$home_rsync" & child=$! && wait $child
-echo "$(date +"[%b %d %H:%M:%S]") sync: home syncing to disk ended"
 
 # Repo Sync to Cloud
-echo "$(date +"[%b %d %H:%M:%S]") sync: home encrypted syncing to cloud started"
 mount="$home_crypt" && mountCrypt "$home_repo" "$mount" "$home_pass" || exit 1
 for stream in "${home_rclone[@]}"; do syncCloud name "$home_repo" "$stream" & child=$! && wait $child; done
-echo "$(date +"[%b %d %H:%M:%S]") sync: home encrypted syncing to cloud ended"
-
-# TODO: Write a logging decorator function to avoid repetion
-# https://unix.stackexchange.com/questions/125819/bash-function-decorator 
