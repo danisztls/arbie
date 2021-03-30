@@ -180,7 +180,7 @@ done
 # Trap ^C to allow forceful exit from child
 trap ctrl_c INT 
 ctrl_c() {
-    kill -15 "$child" && wait "$child" # send SIGTERM to child process
+    kill -15 "$!" && sleep 5 && sync # send SIGTERM to child process
 
     # loop through existent dirs and try to umount/rm them
     mapfile -t mounts < <(fd --type d --max-depth 1 --base-directory "$arb_tmp")
