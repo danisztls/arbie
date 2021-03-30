@@ -1,40 +1,61 @@
 #!/bin/bash
 # A.R.B. Automatic Robust Backup
 
-# LIB 
-# TODO: Automatically create unmount all dirs at /run/user/$uid/arb/ 
-umountCrypt() { # args: $mount
-# Unmount a Gocryptfs directory 
-	([ -d "$1" ] && fusermount -uz "$1") || (printf "<3>ERROR: %s\n" "unmounting $1 failed"; return 1)
-	[ -n "$(ls -A "$1")" ] || rm -r "$1" # remove dir if empty
+# LIB
+arb_tmp=/run/user/$(id -u)/arb
+
+verifySrc() { # args: $name or $path
+    if [ -d "$1" ]; then
+        printf "%s\n" "$1"
+    else
+        printf "%s\n" "$arb_tmp/$1"
+    fi
 }
 
-# TODO: Automatically create a mount at /run/user/$uid/arb/repo_name 
-mountCrypt() { # args: $src $mount_point $pass $exclude(opt)
+umountCrypt() { # args: $name
+# Unmount a Gocryptfs directory 
+    mount="$arb_tmp"/$1
+	([ -d "$mount" ] && fusermount -uz "$mount") || # try to unmount if it exists
+    (printf "<3>ERROR: %s\n" "unmounting $1 failed"; return 1) # print and return error if it fails 
+	[ -n "$(ls -A "$mount")" ] || rm -r "$mount" # remove dir if empty
+}
+
+mountCrypt() { # args: # name $src $pass $exclude(opt)
 # Mount a Gocryptfs directory
-	if [ -d "$2" ] && [[ -n "$(ls -A "$2")" ]]; then
-        printf "<4>WARNING: %s\n" "$2 is already mounted, unmounting..."
-        (umountCrypt "$2" && sleep 2) || return 1 # unmount if already mounted
+    mount="$arb_tmp"/$1
+	if [ -d "$mount" ] && [[ -n "$(ls -A "$mount")" ]]; then # if dst exists and is not empty
+        printf "<4>WARNING: %s\n" "$1 is already mounted, unmounting..."
+        (umountCrypt "$1" && sleep 2) || return 1 # unmount if already mounted
     fi
 	
-    mkdir -p "$2" # make dir if inexistent
+    if ! [ -d "$2" ]; then # check if src dir exists
+        printf "<3>ERROR: %s\n" "$2 does not exist!" && return 1
+    fi
+    
+    mkdir -p "$mount" # create mountpoint dir if inexistent
 	if [ "$4" ]; then # mount reverse encrypted
-		gocryptfs -extpass pass -extpass "$3" -exclude-from "$4" -reverse "$1" "$2"
+		gocryptfs -extpass pass -extpass "$3" -exclude-from "$4" -reverse "$2" "$mount"
 	else
-		gocryptfs -extpass pass -extpass "$3" -reverse "$1" "$2"
+		gocryptfs -extpass pass -extpass "$3" -reverse "$2" "$mount"
 	fi
 }
 
 syncDisk() { #args: $src $dst
 # Sync a dir to disk
-	rsync -a --delete "$1" "$2"
+    src=$(verifySrc "$1")
+	rsync -a --delete "$src" "$2"
 }
 
-syncCloud() { # syncCloud $name $src $stream
+syncCloud() { # syncCloud $name $stream $src(opt)
 # Sync a dir to a cloud bucket
-	printf "<5>NOTICE: %s\n" "syncing $1 to $3"
+    if [ "$3" ]; then
+        src=$(verifySrc "$3")
+    else 
+        src=$(verifySrc "$1")
+    fi
+	printf "<5>NOTICE: %s\n" "syncing $1 to $2"
 	#rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 "$2/" "$3:$1/"
-	rclone sync -u --use-server-modtime --skip-links --fast-list -v "$2/" "$3:$1/"
+	rclone sync -u --use-server-modtime --skip-links --fast-list "$src/" "$2:$1/"
 }
 
 archiveSys() { # args: $repo $exclude
@@ -64,7 +85,7 @@ archiveBorgLite() { # $borg_repo $borg_exclude $src $borg_pass(opt) $borg_key(op
 	[ "$4" ] && export BORG_PASSCOMMAND="pass $4"
 	[ "$5" ] && export BORG_KEY_FILE="$5"
 	borg create -s -x -C auto,lzma --exclude-from "$2" --chunker-params 10,23,16,4095 "::{user}-{now:%y-%m-%d}" "$3" # archive with higher compression and fine granularity
-	borg prune --list --keep-last=1 # purge old
+	borg prune --list --keep-last=3 # purge old
 }
 
 # Decorate
@@ -94,12 +115,19 @@ done
 trap ctrl_c INT 
 ctrl_c() {
     kill -15 "$child" && wait "$child" # send SIGTERM to child process
+
+    # loop through existent dirs and try to umount/rm them
+    mapfile -t mounts < <(fd --type d --max-depth 1 --base-directory "$arb_tmp")
+    for mount in "${mounts[@]}"; do
+        umountCrypt "$mount"
+    done
+
     [ "$mount" ] && umountCrypt "$mount" # unmount last mount point
     printf "<3>ERROR: %s\n" "program with PID '"$child"' was manually terminated!"
     exit 1
 }
 
-# Decorete functions with logging
+# Decorate functions with logging
 decorate syncDisk
 decorate syncCloud
 decorate archiveSys

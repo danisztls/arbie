@@ -10,7 +10,6 @@ system_exclude="audisp brlapi.key ca-certificates crypttab default/useradd gshad
 # Home
 home_repo="$HOME/.archive/home"                     # borg repository
 home_exclude="$config/home.ignore"           # borg exclude file
-home_crypt="/tmp/$USER/name-crypt"          # gocryptfs encrypted dir
 home_pass="home"                            # gocryptfs password
 home_rsync="/mnt/backup/name"               # rsync destination dir
 home_rclone=(nextcloud onedrive amazons3)   # rclone destination streams
@@ -20,11 +19,17 @@ home_rclone=(nextcloud onedrive amazons3)   # rclone destination streams
 archiveSys "$system_repo" "$system_exclude" & child=$! && wait $child
 
 # Borg Archive
-archiveBorg "$home_repo" "$home_exclude" "$home_src" & child=$! && wait $child
+archiveBorg "$home_repo" "$home_exclude" "$HOME" & child=$! && wait $child
 
 # Repo Sync to Disk
 syncDisk "$home_repo" "$home_rsync" & child=$! && wait $child
 
 # Repo Sync to Cloud
-mount="$home_crypt" && mountCrypt "$home_repo" "$mount" "$home_pass" || exit 1
-for stream in "${home_rclone[@]}"; do syncCloud name "$home_repo" "$stream" & child=$! && wait $child; done
+mountCrypt "home" "$home_repo" "$home_pass" || exit 1
+for stream in "${home_rclone[@]}"; do
+    syncCloud "home" "$stream" & child=$! && wait $child
+done
+
+# TODO: Move for loop to arb
+# TODO: Use getopts to make program flow less fragile
+# TODO: Always pass name to improve determinism and logging
