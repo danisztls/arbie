@@ -12,9 +12,11 @@ umountCrypt() { # args: $mount
 # TODO: Automatically create a mount at /run/user/$uid/arb/repo_name 
 mountCrypt() { # args: $src $mount_point $pass $exclude(opt)
 # Mount a Gocryptfs directory
-	[ -d "$2" ] && [[ -n "$(ls -A "$2")" ]] &&
-    (printf "<4>WARNING: %s\n" "$2 is already mounted, unmounting..."; (umountCrypt "$2" && sleep 2) || return 1) # unmount if already mounted
-	# FIXME: Use IF instead of branching
+	if [ -d "$2" ] && [[ -n "$(ls -A "$2")" ]]; then
+        printf "<4>WARNING: %s\n" "$2 is already mounted, unmounting..."
+        (umountCrypt "$2" && sleep 2) || return 1 # unmount if already mounted
+    fi
+	
     mkdir -p "$2" # make dir if inexistent
 	if [ "$4" ]; then # mount reverse encrypted
 		gocryptfs -extpass pass -extpass "$3" -exclude-from "$4" -reverse "$1" "$2"
