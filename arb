@@ -1,16 +1,18 @@
 #!/bin/bash
 # A.R.B. Automatic Robust Backup
 
-# LIB
+#set -e # exit when anything fails
 arb_tmp=/run/user/$(id -u)/arb
 
+# LIB
 umountCrypt() {
 # Unmount a Gocryptfs directory
+    local OPTIND name mount
     while getopts "n:" opt; do
-      case $opt in
-        n) name=$OPTARG;;
-        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-      esac
+        case $opt in
+            n) name=$OPTARG;;
+            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+        esac
     done
 
     if ! [ "$name" ]; then
@@ -25,14 +27,15 @@ umountCrypt() {
 
 mountCrypt() {
 # Mount a Gocryptfs directory
+    local OPTIND name input pass exclude_file mount
     while getopts "n:i:p:e:" opt; do
-      case $opt in
-        n) name=$OPTARG;;
-        i) input=$OPTARG;;
-        p) pass=$OPTARG;;
-        e) exclude_file=$OPTARG;; #optional
-        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-      esac
+        case $opt in
+            n) name=$OPTARG;;
+            i) input=$OPTARG;;
+            p) pass=$OPTARG;;
+            e) exclude_file=$OPTARG;; #optional
+            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+        esac
     done
 
     if ! [ "$name" ] && [ "$input" ] && [ "$pass" ]; then
@@ -55,31 +58,33 @@ mountCrypt() {
 
 syncDisk() {
 # Sync a dir to disk
+    local OPTIND name input output
     while getopts "n:i:o:" opt; do
-      case $opt in
-        n) name=$OPTARG;;
-        i) input=$OPTARG;; # optional
-        o) output=$OPTARG;;
-        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-      esac
+        case $opt in
+            n) name=$OPTARG;;
+            i) input=$OPTARG;; # optional
+            o) output=$OPTARG;;
+            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+        esac
     done
-
+    
     if ! [ "$name" ] && [ "$output" ]; then
         printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
-	rsync -a --delete "${input:=$arb_tmp/$name}/" "$output/" # assign value to $input with not set
+	rsync -a --delete "${input:-$arb_tmp/$name}/" "$output/" # assign value to $input with not set
 }
 
 syncCloud() {
 # Sync a dir to a cloud bucket
+    local OPTIND name input streams
     while getopts "n:i:s:" opt; do
-      case $opt in
-        n) name=$OPTARG;;
-        i) input=$OPTARG;; # optional
-        s) streams=$OPTARG;;
-        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-      esac
+        case $opt in
+            n) name=$OPTARG;;
+            i) input=$OPTARG;; # optional
+            s) streams=$OPTARG;;
+            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+        esac
     done
     
     if ! [ "$name" ] && [ "$streams" ]; then
@@ -89,19 +94,20 @@ syncCloud() {
     for stream in "${streams[@]}"; do
         printf "<5>NOTICE: %s\n" "syncing $name to $stream"
         rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 \
-        "${input:=$arb_tmp/$name}/" "$stream:$name/" # assign value to $input with not set 
+        "${input:-$arb_tmp/$name}/" "$stream:$name/" # assign value to $input with not set 
     done
 }
 
 archiveSys() {
 # Archive system confs
+    local OPTIND name output exclude
     name="sys"
     while getopts "o:e:" opt; do
-      case $opt in
-        o) output=$OPTARG;;
-        e) exclude=$OPTARG;;
-        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-      esac
+        case $opt in
+            o) output=$OPTARG;;
+            e) exclude=$OPTARG;;
+            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+        esac
     done
     
     if ! [ "$output" ] && [ "$exclude" ]; then
@@ -120,24 +126,25 @@ archiveSys() {
 
 archiveBorg() {
 # Archive a dir with borg (default)
+    local OPTIND name input output exclude_file pass key lite
     while getopts "n:i:o:e:p:k:l" opt; do
-      case $opt in
-        n) name=$OPTARG;;
-        i) input=$OPTARG;;
-        o) output=$OPTARG && export BORG_REPO="$output";;
-        e) exclude_file=$OPTARG;;
-        p) pass=$OPTARG && export BORG_PASSCOMMAND="pass $pass";; # optional
-        k) key=$OPTARG && export BORG_KEY_FILE="$key";; # optional
-        l) lite=1;; # optional
-        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-      esac
+        case $opt in
+            n) name=$OPTARG;;
+            i) input=$OPTARG;;
+            o) output=$OPTARG && export BORG_REPO="$output";;
+            e) exclude_file=$OPTARG;;
+            p) pass=$OPTARG && export BORG_PASSCOMMAND="pass $pass";; # optional
+            k) key=$OPTARG && export BORG_KEY_FILE="$key";; # optional
+            l) lite=1;; # optional
+            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+        esac
     done
     
     if ! [ "$name" ] && [ "$input" ] && [ "$output" ] && [ "$exclude_file" ]; then
         printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
-    if ! [ $lite -eq 1 ]; then
+    if ! [ $lite ]; then
         borg create -s -x -C lz4 --exclude-from "$exclude_file" "::{user}-{now:%y-%m-%d}" "$input" # archive
         borg prune --list --keep-daily=7 --keep-weekly=4 --keep-monthly=6 # purge old
     else
