@@ -30,4 +30,3 @@ syncCloud -n "home" -s "$home_rclone" & child=$! && wait $child
 umountCrypt -n "home"
 
 # TODO: Is it possible to move child PID parsing and wait to main?
-# TODO: Encryption should be automatically done by main and config could be simplified to a encryption tag.

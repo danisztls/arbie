@@ -1,8 +1,8 @@
 #!/bin/bash
 # Install program to user home
 
-TODO: Rewrite as Makefile
-TODO: Write a PKGBUILD
+# TODO: Rewrite as Makefile
+# TODO: Write a PKGBUILD
 
 bin="$HOME/.local/bin"
 config="$HOME/.config/arb"

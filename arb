@@ -9,12 +9,12 @@ umountCrypt() {
     while getopts "n:" opt; do
       case $opt in
         n) name=$OPTARG;;
-        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
       esac
     done
 
     if ! [ "$name" ]; then
-        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
     mount="$arb_tmp/$name"
@@ -31,12 +31,12 @@ mountCrypt() {
         i) input=$OPTARG;;
         p) pass=$OPTARG;;
         e) exclude_file=$OPTARG;; #optional
-        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
       esac
     done
 
     if ! [ "$name" ] && [ "$input" ] && [ "$pass" ]; then
-        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
     mount="$arb_tmp/$name"
@@ -60,12 +60,12 @@ syncDisk() {
         n) name=$OPTARG;;
         i) input=$OPTARG;; # optional
         o) output=$OPTARG;;
-        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
       esac
     done
 
     if ! [ "$name" ] && [ "$output" ]; then
-        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
 	rsync -a --delete "${input:=$arb_tmp/$name}/" "$output/" # assign value to $input with not set
@@ -78,12 +78,12 @@ syncCloud() {
         n) name=$OPTARG;;
         i) input=$OPTARG;; # optional
         s) streams=$OPTARG;;
-        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
       esac
     done
     
     if ! [ "$name" ] && [ "$streams" ]; then
-        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
     for stream in "${streams[@]}"; do
@@ -100,12 +100,12 @@ archiveSys() {
       case $opt in
         o) output=$OPTARG;;
         e) exclude=$OPTARG;;
-        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
       esac
     done
     
     if ! [ "$output" ] && [ "$exclude" ]; then
-        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
 	mkdir -p "$output" # make dir if inexistent
@@ -124,23 +124,19 @@ archiveBorg() {
       case $opt in
         n) name=$OPTARG;;
         i) input=$OPTARG;;
-        o) output=$OPTARG;;
+        o) output=$OPTARG && export BORG_REPO="$output";;
         e) exclude_file=$OPTARG;;
-        p) pass=$OPTARG;; # optional
-        k) key=$OPTARG;; # optional
+        p) pass=$OPTARG && export BORG_PASSCOMMAND="pass $pass";; # optional
+        k) key=$OPTARG && export BORG_KEY_FILE="$key";; # optional
         l) lite=1;; # optional
-        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+        *) printf "<3>ERROR: %s\n" "Something is wrong!";;
       esac
     done
     
     if ! [ "$name" ] && [ "$input" ] && [ "$output" ] && [ "$exclude_file" ]; then
-        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
-    export BORG_REPO="$output"
-	[ "$pass" ] && export BORG_PASSCOMMAND="pass $pass"
-	[ "$key" ] && export BORG_KEY_FILE="$key"
-	
     if ! [ $lite -eq 1 ]; then
         borg create -s -x -C lz4 --exclude-from "$exclude_file" "::{user}-{now:%y-%m-%d}" "$input" # archive
         borg prune --list --keep-daily=7 --keep-weekly=4 --keep-monthly=6 # purge old
