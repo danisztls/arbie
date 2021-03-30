@@ -16,20 +16,18 @@ home_rclone=(nextcloud onedrive amazons3)   # rclone destination streams
 
 # TASKS
 # System Archive
-archiveSys "$system_repo" "$system_exclude" & child=$! && wait $child
+archiveSys -o "$system_repo" -e "$system_exclude" & child=$! && wait $child
 
 # Borg Archive
-archiveBorg "$home_repo" "$home_exclude" "$HOME" & child=$! && wait $child
+archiveBorg -n "home" -i "$HOME" -o "$home_repo" -e "$home_exclude" & child=$! && wait $child
 
 # Repo Sync to Disk
-syncDisk "$home_repo" "$home_rsync" & child=$! && wait $child
+syncDisk -n "home" -i "$home_repo" -o "$home_rsync" & child=$! && wait $child
 
 # Repo Sync to Cloud
-mountCrypt "home" "$home_repo" "$home_pass" || exit 1
-syncCloud "home" "$home_rclone" & child=$! && wait $child
-umountCrypt "home"
+mountCrypt -n "home" -i "$home_repo" -p "$home_pass" || exit 1
+syncCloud -n "home" -s "$home_rclone" & child=$! && wait $child
+umountCrypt -n "home"
 
-# TODO: Use getopts to make arguments less fragile.
-# TODO: Always pass name to improve determinism.
 # TODO: Is it possible to move child PID parsing and wait to main?
 # TODO: Encryption should be automatically done by main and config could be simplified to a encryption tag.

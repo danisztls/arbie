@@ -42,11 +42,7 @@ Automatic Robust Backup or A.R.B. is an archiving and synchronization tool with 
 - **Git** is the popular version control system.
 - **Pass** is the standard UNIX password manager.
 
-Basically it is a shell pipeline for all these tools.
-
 ## Setup
-**Caution: Don't use this tool if you don't grok Shell and Linux.**
-
 ### Install
 `./setup install`
 
@@ -54,7 +50,7 @@ Basically it is a shell pipeline for all these tools.
 Edit `.config/arb/config` to set up your archiving pipelines. Examples for system and home archiving included.
 
 ### Init
-You have to manually configure/initialize those that will be used. 
+Some of the tools require manual initialization or configuration. 
 
 #### Init Git in System repository
 `git -C "$system_repo" init`

@@ -4,93 +4,167 @@
 # LIB
 arb_tmp=/run/user/$(id -u)/arb
 
-verifySrc() { # args: $name or $path
-    if [ -d "$1" ]; then
-        printf "%s\n" "$1"
-    else
-        printf "%s\n" "$arb_tmp/$1"
-    fi
-}
+umountCrypt() {
+# Unmount a Gocryptfs directory
+    while getopts "n:" opt; do
+      case $opt in
+        n) name=$OPTARG;;
+        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+      esac
+    done
 
-umountCrypt() { # args: $name
-# Unmount a Gocryptfs directory 
-    mount="$arb_tmp"/$1
+    if ! [ "$name" ]; then
+        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+    fi
+
+    mount="$arb_tmp/$name"
 	([ -d "$mount" ] && fusermount -uz "$mount") || # try to unmount if it exists
-    (printf "<3>ERROR: %s\n" "unmounting $1 failed"; return 1) # print and return error if it fails 
+    (printf "<3>ERROR: %s\n" "unmounting $name failed"; return 1) # print and return error if it fails 
 	[ -n "$(ls -A "$mount")" ] || rm -r "$mount" # remove dir if empty
 }
 
-mountCrypt() { # args: # name $src $pass $exclude(opt)
+mountCrypt() {
 # Mount a Gocryptfs directory
-    mount="$arb_tmp"/$1
-	if [ -d "$mount" ] && [[ -n "$(ls -A "$mount")" ]]; then # if dst exists and is not empty
-        printf "<4>WARNING: %s\n" "$1 is already mounted, unmounting..."
-        (umountCrypt "$1" && sleep 2) || return 1 # unmount if already mounted
+    while getopts "n:i:p:e:" opt; do
+      case $opt in
+        n) name=$OPTARG;;
+        i) input=$OPTARG;;
+        p) pass=$OPTARG;;
+        e) exclude_file=$OPTARG;; #optional
+        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+      esac
+    done
+
+    if ! [ "$name" ] && [ "$input" ] && [ "$pass" ]; then
+        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+    fi
+
+    mount="$arb_tmp/$name"
+	if [ -d "$mount" ] && [[ -n "$(ls -A "$mount")" ]]; then # if mount exists and is not empty
+        printf "<4>WARNING: %s\n" "$name is already mounted, unmounting..."
+        (umountCrypt -n "$name" && sleep 2) || return 1 # unmount if already mounted
     fi
 	
-    if ! [ -d "$2" ]; then # check if src dir exists
-        printf "<3>ERROR: %s\n" "$2 does not exist!" && return 1
+    if ! [ -d "$input" ]; then # check if input dir exists
+        printf "<3>ERROR: %s\n" "$input does not exist!" && return 1
     fi
     
     mkdir -p "$mount" # create mountpoint dir if inexistent
-	if [ "$4" ]; then # mount reverse encrypted
-		gocryptfs -extpass pass -extpass "$3" -exclude-from "$4" -reverse "$2" "$mount"
+    # TODO: Use bash expansion instead of if
+	if [ "$exclude_file" ]; then # mount reverse encrypted
+		gocryptfs -extpass pass -extpass "$pass" -exclude-from "$exclude_file" -reverse "$input" "$mount"
 	else
-		gocryptfs -extpass pass -extpass "$3" -reverse "$2" "$mount"
+		gocryptfs -extpass pass -extpass "$pass" -reverse "$input" "$mount"
 	fi
 }
 
-syncDisk() { #args: $src $dst
+syncDisk() {
 # Sync a dir to disk
-    src=$(verifySrc "$1")
-	rsync -a --delete "$src" "$2"
+    while getopts "n:i:o:" opt; do
+      case $opt in
+        n) name=$OPTARG;;
+        i) input=$OPTARG;; # optional
+        o) output=$OPTARG;;
+        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+      esac
+    done
+
+    if ! [ "$name" ] && [ "$output" ]; then
+        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+    fi
+
+    if ! [ "$input" ]; then # get input from name
+        input="$arb_tmp/$name"
+    fi
+
+	rsync -a --delete "$input/" "$output/"
 }
 
-syncCloud() { # syncCloud $name $streams $src(opt)
+syncCloud() {
 # Sync a dir to a cloud bucket
-    if [ "$3" ]; then
-        src=$(verifySrc "$3")
-    else 
-        src=$(verifySrc "$1")
+    while getopts "n:i:s:" opt; do
+      case $opt in
+        n) name=$OPTARG;;
+        i) input=$OPTARG;; # optional
+        s) streams=$OPTARG;;
+        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+      esac
+    done
+    
+    if ! [ "$name" ] && [ "$streams" ]; then
+        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
     fi
-    for stream in "${3[@]}"; do
-        printf "<5>NOTICE: %s\n" "syncing $1 to $2"
-        rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 "$src/" "$stream:$1/"
+    
+    if ! [ "$input" ]; then # get input from name
+        input="$arb_tmp/$name"
+    fi
+
+    for stream in "${streams[@]}"; do
+        printf "<5>NOTICE: %s\n" "syncing $name to $stream"
+        rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 "$input/" "$stream:$name/"
     done
 }
 
-archiveSys() { # args: $repo $exclude
-# Archive system confs 
-	mkdir -p "$1" # make dir if inexistent
-	pacman -Qqen > "$1/pkglist.txt" # export non-local pkg list
-	pacman -Qqem > "$1/pkglist-local.txt" # export local pkg list
-	export CVSIGNORE="$2" && rsync -qaH --delete -C /etc/ "$1/etc/" # sync /etc
-	git -C "$1" add -A && git -C "$1" commit -m "$(date +%Y-%m-%d)" # archive changes in git
+archiveSys() {
+# Archive system confs
+    name="sys"
+    while getopts "o:e:" opt; do
+      case $opt in
+        o) output=$OPTARG;;
+        e) exclude=$OPTARG;;
+        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+      esac
+    done
+    
+    if ! [ "$output" ] && [ "$exclude" ]; then
+        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+    fi
+
+	mkdir -p "$output" # make dir if inexistent
+	pacman -Qqen > "$output/pkglist.txt" # export non-local pkg list
+	pacman -Qqem > "$output/pkglist-local.txt" # export local pkg list
+	export CVSIGNORE="$exclude" && rsync -qaH --delete -C /etc/ "$output/etc/" # sync /etc
+	git -C "$output" add -A && git -C "$output" commit -m "$(date +%Y-%m-%d)" # archive changes in git
 }
 
 # TODO: Use etckeeper to archive system /etc
 # https://wiki.archlinux.org/index.php/Etckeeper 
 
-archiveBorg() { # args: $borg_repo $borg_exclude $src $borg_pass(opt) $borg_key(opt)
+archiveBorg() {
 # Archive a dir with borg (default)
-    export BORG_REPO="$1"
-	[ "$4" ] && export BORG_PASSCOMMAND="pass $4"
-	[ "$5" ] && export BORG_KEY_FILE="$5"
-	borg create -s -x -C lz4 --exclude-from "$2" "::{user}-{now:%y-%m-%d}" "$3" # archive
-	borg prune --list --keep-daily=7 --keep-weekly=4 --keep-monthly=6 # purge old
-}
+    while getopts "n:i:o:e:p:k:l" opt; do
+      case $opt in
+        n) name=$OPTARG;;
+        i) input=$OPTARG;;
+        o) output=$OPTARG;;
+        e) exclude_file=$OPTARG;;
+        p) pass=$OPTARG;; # optional
+        k) key=$OPTARG;; # optional
+        l) lite=1;; # optional
+        *) printf "<3>ERROR: %s" "Something is wrong!" && return 1
+      esac
+    done
+    
+    if ! [ "$name" ] && [ "$input" ] && [ "$output" ] && [ "$exclude_file" ]; then
+        printf "<3>ERROR: %s" "Missing required arguments!" && return 1
+    fi
 
-archiveBorgLite() { # $borg_repo $borg_exclude $src $borg_pass(opt) $borg_key(opt)
-    # Archive a dir with borg (higher compression and chunk granularity)
-	export BORG_REPO="$1"
-	[ "$4" ] && export BORG_PASSCOMMAND="pass $4"
-	[ "$5" ] && export BORG_KEY_FILE="$5"
-	borg create -s -x -C auto,lzma --exclude-from "$2" --chunker-params 10,23,16,4095 "::{user}-{now:%y-%m-%d}" "$3" # archive with higher compression and fine granularity
-	borg prune --list --keep-last=2 # purge old
+    export BORG_REPO="$output"
+	[ "$pass" ] && export BORG_PASSCOMMAND="pass $pass"
+	[ "$key" ] && export BORG_KEY_FILE="$key"
+	
+    if ! [ $lite -eq 1 ]; then
+        borg create -s -x -C lz4 --exclude-from "$exclude_file" "::{user}-{now:%y-%m-%d}" "$input" # archive
+        borg prune --list --keep-daily=7 --keep-weekly=4 --keep-monthly=6 # purge old
+    else
+        borg create -s -x -C auto,lzma --exclude-from "$exclude_file" --chunker-params 10,23,16,4095 \
+"::{user}-{now:%y-%m-%d}" "$input" # higher compression and fine granularity
+        borg prune --list --keep-last=2
+    fi
 }
 
 # Decorate
-decorate() { # args: function
+decorate() {
 # Decorator for logging
     eval "
         _inner_$(typeset -f "$1")
@@ -119,11 +193,11 @@ ctrl_c() {
 
     # loop through existent dirs and try to umount/rm them
     mapfile -t mounts < <(fd --type d --max-depth 1 --base-directory "$arb_tmp")
-    for mount in "${mounts[@]}"; do
-        umountCrypt "$mount"
+    for name in "${mounts[@]}"; do
+        umountCrypt -n "$name"
     done
 
-    [ "$mount" ] && umountCrypt "$mount" # unmount last mount point
+    [ "$mount" ] && umountCrypt -n "$mount" # unmount last mount point
     printf "<3>ERROR: %s\n" "program with PID '"$child"' was manually terminated!"
     exit 1
 }
@@ -133,7 +207,6 @@ decorate syncDisk
 decorate syncCloud
 decorate archiveSys
 decorate archiveBorg
-decorate archiveBorgLite
 
 # Source variables and commands from config file
 config="$HOME/.config/arb/config"
