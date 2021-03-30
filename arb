@@ -46,16 +46,17 @@ syncDisk() { #args: $src $dst
 	rsync -a --delete "$src" "$2"
 }
 
-syncCloud() { # syncCloud $name $stream $src(opt)
+syncCloud() { # syncCloud $name $streams $src(opt)
 # Sync a dir to a cloud bucket
     if [ "$3" ]; then
         src=$(verifySrc "$3")
     else 
         src=$(verifySrc "$1")
     fi
-	printf "<5>NOTICE: %s\n" "syncing $1 to $2"
-	#rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 "$2/" "$3:$1/"
-	rclone sync -u --use-server-modtime --skip-links --fast-list "$src/" "$2:$1/"
+    for stream in "${3[@]}"; do
+        printf "<5>NOTICE: %s\n" "syncing $1 to $2"
+        rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 "$src/" "$stream:$1/"
+    done
 }
 
 archiveSys() { # args: $repo $exclude
@@ -85,7 +86,7 @@ archiveBorgLite() { # $borg_repo $borg_exclude $src $borg_pass(opt) $borg_key(op
 	[ "$4" ] && export BORG_PASSCOMMAND="pass $4"
 	[ "$5" ] && export BORG_KEY_FILE="$5"
 	borg create -s -x -C auto,lzma --exclude-from "$2" --chunker-params 10,23,16,4095 "::{user}-{now:%y-%m-%d}" "$3" # archive with higher compression and fine granularity
-	borg prune --list --keep-last=3 # purge old
+	borg prune --list --keep-last=2 # purge old
 }
 
 # Decorate

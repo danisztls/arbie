@@ -26,10 +26,10 @@ syncDisk "$home_repo" "$home_rsync" & child=$! && wait $child
 
 # Repo Sync to Cloud
 mountCrypt "home" "$home_repo" "$home_pass" || exit 1
-for stream in "${home_rclone[@]}"; do
-    syncCloud "home" "$stream" & child=$! && wait $child
-done
+syncCloud "home" "$home_rclone" & child=$! && wait $child
+umountCrypt "home"
 
-# TODO: Move for loop to arb
-# TODO: Use getopts to make program flow less fragile
-# TODO: Always pass name to improve determinism and logging
+# TODO: Use getopts to make arguments less fragile.
+# TODO: Always pass name to improve determinism.
+# TODO: Is it possible to move child PID parsing and wait to main?
+# TODO: Encryption should be automatically done by main and config could be simplified to a encryption tag.
