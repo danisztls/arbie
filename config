@@ -1,5 +1,7 @@
 #!/bin/bash
 # A.R.B. Configuration File
+# THIS IS ONLY A TEMPLATE
+
 # ENVIRONMENT
 config="$HOME/config/arb"
 

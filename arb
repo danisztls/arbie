@@ -121,9 +121,6 @@ archiveSys() {
 	git -C "$output" add -A && git -C "$output" commit -m "$(date +%Y-%m-%d)" # archive changes in git
 }
 
-# TODO: Use etckeeper to archive system /etc
-# https://wiki.archlinux.org/index.php/Etckeeper 
-
 archiveBorg() {
 # Archive a dir with borg (default)
     local OPTIND name input output exclude_file pass key lite

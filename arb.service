@@ -1,7 +1,7 @@
 [Unit]
 Description=Automatic Robust Backup
-Wants=graphical-session.target
+Wants=default.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/.local/bin/arb
+ExecStart=arb

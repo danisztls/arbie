@@ -7,5 +7,5 @@ OnCalendar=daily
 Persistent=true
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=default.target
 
