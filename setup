@@ -1,33 +1,22 @@
 #!/bin/bash
-# Install program to user home
-
-# TODO: Rewrite as Makefile
-# TODO: Write a PKGBUILD
-
+# Install ARB to user home
 bin="$HOME/.local/bin"
 config="$HOME/.config/arb"
 systemd="$HOME/.config/systemd/user"
-script=$(readlink -f "$0") # absolute script path
-src=$(dirname "$script") # absolute source files path
-deps=(borg git gocryptfs pass rclone rsync) # dependencies
+src=$(dirname "$(readlink -f "$0")") # absolute source files path
 
-installMany() {
-# Install packages from a list
-    toInstall=()
-    for pkg; do pacman -Qi "$pkg" &> /dev/null || toInstall+=("$pkg"); done # select pkgs not already installed
-    [[ "${toInstall[*]}" == "" ]] || ( sudo pacman -Syu && sudo pacman -S "${toInstall[@]}" ) # install select pkgs if any
-}
-
-if [ "$#" -ne 1 ]; then # HELP
+# HELP
+if [ "$#" -ne 1 ]; then
     echo "Options are install and uninstall." && exit 1
 fi
 
 # INSTALL
 if [ "$1" == install ]; then
-    installMany "${deps[@]}" # install pkgs
     mkdir -p "$bin" && cp "$src/arb" "$bin/arb" # copy bin
-    mkdir -p "$config" && cp -n "$src/config" "$src/template.ignore" "$config/" # copy data (don't overwrite)
-    mkdir -p "$systemd" && cp "$src/arb.service" "$src/arb.timer" "$systemd/" && systemctl --user daemon-reload # setup systemd
+    mkdir -p "$config" && cp -n "$src/config" "$src/ignore" "$config/" # copy data (don't overwrite)
+    mkdir -p "$systemd" && cp "$src/arb.service" "$src/arb.timer" "$systemd/"
+    sed -i 's#ExecStart=#ExecStart=%h/.local/bin/#' "$systemd/arb.service"
+    systemctl --user daemon-reload # setup systemd
     exit 0
 fi
 
