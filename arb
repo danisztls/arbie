@@ -1,17 +1,27 @@
 #!/bin/bash
 # A.R.B. Automatic Robust Backup
 
-#set -e # exit when anything fails
+# DEBUGGING
+# set -e # exit when anything 'fails'
+# Problems:
+#   - Borg return 1 when archive name already exist (intended to avoid duplicates);
+#   - Rsync return 1 when some files can't be acessed (acceptable behavior as some files should
+#     be read protected and ARB is running as user.
 
-# root for temporary encrypted dirs
+# ENVIRONMENT
+# Check for dependencies
+arb_deps=(borg gocryptfs rclone rsync git)
+for dep in "${arb_deps[@]}"; do
+    if ! [[ $(command -v "$dep") ]]; then
+        printf "<3>ERROR: %s\n" "$dep not found. Missing required!" && exit 1
+    fi
+done
+
+pass_bin=${$(command -v pass):-$(command -v pass)} # prefer gopass
+[ $pass_bin ] || printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
+
+# Dir for temporary stuff
 arb_tmp=/run/user/$(id -u)/arb
-
-# check if gopass is installed
-if [[ $(command -v gopass) ]]; then
-    pass_bin=gopass
-else
-    pass_bin=pass
-fi
 
 # LIB
 umountCrypt() {
@@ -195,7 +205,7 @@ ctrl_c() {
     done
 
     [ "$mount" ] && umountCrypt -n "$mount" # unmount last mount point
-    printf "<3>ERROR: %s\n" "program with PID '"$child"' was manually terminated!"
+    printf "<3>ERROR: %s\n" "program with PID '"$!"' was manually terminated!"
     exit 1
 }
 
