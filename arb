@@ -2,7 +2,16 @@
 # A.R.B. Automatic Robust Backup
 
 #set -e # exit when anything fails
+
+# root for temporary encrypted dirs
 arb_tmp=/run/user/$(id -u)/arb
+
+# check if gopass is installed
+if [[ $(command -v gopass) ]]; then
+    pass_bin=gopass
+else
+    pass_bin=pass
+fi
 
 # LIB
 umountCrypt() {
@@ -53,7 +62,7 @@ mountCrypt() {
     fi
     
     mkdir -p "$mount" # create mountpoint dir if inexistent
-	gocryptfs -extpass pass -extpass "$pass" ${exclude_file:+-exclude-from "$exclude_file"} -reverse "$input" "$mount"
+	gocryptfs -extpass "$pass_bin" -extpass "$pass" ${exclude_file:+-exclude-from "$exclude_file"} -reverse "$input" "$mount"
 }
 
 syncDisk() {
@@ -130,7 +139,7 @@ archiveBorg() {
             i) input=$OPTARG;;
             o) output=$OPTARG && export BORG_REPO="$output";;
             e) exclude_file=$OPTARG;;
-            p) pass=$OPTARG && export BORG_PASSCOMMAND="pass $pass";; # optional
+            p) pass=$OPTARG && export BORG_PASSCOMMAND="$pass_bin $pass";; # optional
             k) key=$OPTARG && export BORG_KEY_FILE="$key";; # optional
             l) lite=1;; # optional
             *) printf "<3>ERROR: %s\n" "Something is wrong!";;
