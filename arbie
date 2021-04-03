@@ -178,7 +178,7 @@ archiveBorg() {
 }
 
 # Decorate
-decorate() {
+_decorate() {
 # Decorator for logging
     eval "
         _inner_$(typeset -f "$1")
@@ -195,14 +195,14 @@ decorate() {
 # Exit without doing anything if already being executed
 for pid in $(pidof -x arbie); do 
     if [ "$pid" != $$ ]; then
-	    printf "<3>ERROR: %s\n" "program is already running with PID '"$pid"'!"
+	    printf "<3>ERROR: %s\n" "program is already running with PID '$pid'!"
         exit 1
     fi
 done
 
 # Trap ^C to allow forceful exit from child
-trap ctrl_c INT 
-ctrl_c() {
+trap _ctrl_c INT 
+_ctrl_c() {
     kill -15 "$!" && sleep 5 && sync # send SIGTERM to child process
 
     # loop through existent dirs and try to umount/rm them
@@ -212,15 +212,16 @@ ctrl_c() {
     done
 
     [ "$mount" ] && umountCrypt -n "$mount" # unmount last mount point
-    printf "<3>ERROR: %s\n" "program with PID '"$!"' was manually terminated!"
+    printf "<3>ERROR: %s\n" "program with PID '$!' was manually terminated!"
     exit 1
 }
 
 # Decorate functions with logging
-decorate syncDisk
-decorate syncCloud
-decorate archiveSys
-decorate archiveBorg
+_decorate syncDisk
+_decorate syncCloud
+_decorate archiveSys
+_decorate archiveBorg
 
 # Source variables and commands
+# shellcheck disable=1090
 source "$config"
