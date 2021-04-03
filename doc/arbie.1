@@ -2,9 +2,10 @@
 
 .SH "Automatic Robust Backup"
 
-.SS "About"
 .PP
 Automatic Robust Backup or A\.R\.B\. is an archiving and synchronization tool with automation, encryption, redundancy and performance as it goals\. It is fast to deploy, have sensible defaults and come with templates for common use cases\.
+
+.SS "About"
 
 .SB "Goals"
 .RS
@@ -30,53 +31,53 @@ Automatic Robust Backup or A\.R\.B\. is an archiving and synchronization tool wi
 .RS
 .Bl
 .IP \(bu 4
-Borg[1], the most popular chunk\-based deduplication backup manager for home users\.
+Borg[28], the most popular chunk\-based deduplication backup manager for home users\.
 .El
 .sp
-[1] https://github\.com/borgbackup/borg 
+[28] https://github\.com/borgbackup/borg 
 .nf
 .fi
 .Bl
 .IP \(bu 4
-Gocryptfs[2], the spiritual successor to Ecryptfs that is mature, audited actively developed\.
+Gocryptfs[29], the spiritual successor to Ecryptfs that is mature, audited actively developed\.
 .El
 .sp
-[2] https://github\.com/rfjakob/gocryptfs 
+[29] https://github\.com/rfjakob/gocryptfs 
 .nf
 .fi
 .Bl
 .IP \(bu 4
-Rclone[3] is a mature command line cloud storage manager that supports most if not all common providers\.
+Rclone[30] is a mature command line cloud storage manager that supports most if not all common providers\.
 .El
 .sp
-[3] https://github\.com/rclone 
+[30] https://github\.com/rclone 
 .nf
 .fi
 .Bl
 .IP \(bu 4
-Rsync[4] is the best way to sync a directory to another local or network directory\.
+Rsync[31] is the best way to sync a directory to another local or network directory\.
 .El
 .sp
-[4] https://github\.com/WayneD/rsync 
+[31] https://github\.com/WayneD/rsync 
 .nf
 .fi
 .Bl
 .IP \(bu 4
-Git[5] is the most popular version control system\.
+Git[32] is the most popular version control system\.
 .El
 .sp
-[5] https://github\.com/git/git 
+[32] https://github\.com/git/git 
 .nf
 .fi
 .Bl
 .IP \(bu 4
-Pass[6], the standard UNIX password manager, or gopass[7], its actively developed Go fork\.
+Pass[33], the standard UNIX password manager, or gopass[34], its actively developed Go fork\.
 .El
 .sp
-[6] https://www\.passwordstore\.org/ 
+[33] https://www\.passwordstore\.org/ 
 .nf
 .fi
-[7] https://github\.com/gopasspw/gopass 
+[34] https://github\.com/gopasspw/gopass 
 .nf
 .fi
 .RE
@@ -121,9 +122,12 @@ Archive your personal files and whatever files you wish\.
 
 .SB "Globally"
 .PP
-If you're in an Arch based distro, install with an AUR helper like paru[8] or build manually the included PKGBUILD\.
+If you're in an Arch based distro, install with an AUR helper like paru[35] or build manually the PKGBUILD[36]\.
 .sp
-[8] https://github\.com/Morganamilo/paru 
+[35] https://github\.com/Morganamilo/paru 
+.nf
+.fi
+[36] https://aur\.archlinux\.org/packages/arbie\-git/ 
 .nf
 .fi
 
@@ -139,9 +143,9 @@ $ make install
 
 .SB "Locally"
 .PP
-Installing locally may be advantageous in systems for which ARB isn't packaged or for users of systemd\-homed[9] that share their home between systems\. 
+Installing locally may be advantageous in systems for which ARB isn't packaged or for users of systemd\-homed[37] that share their home between systems\. 
 .sp
-[9] https://wiki\.archlinux\.org/index\.php/Systemd\-homed 
+[37] https://wiki\.archlinux\.org/index\.php/Systemd\-homed 
 .nf
 .fi
 
@@ -153,10 +157,12 @@ $ \./setup install
 .RE
 
 .SS "Configure"
+
+.SB "Pipelines"
 .PP
 Edit `\f[CR]\.config/arbie/config\fP` to set up pipelines\. Instructions and examples included in the file\.
 
-.SS "Init"
+.SB "Init"
 .PP
 Some of the tools require manual initialization or configuration\. In the future there will be a tool to partially automate those\. 
 
@@ -234,6 +240,31 @@ $ rclone config
 .fi
 .RE
 
+.SB "Service"
+.PP
+Enable the systemd timer as user
+.RS
+.PP
+.nf
+$ systemctl \-\-user enable arbie\.timer
+.fi
+.RE
+.PP
+By default it will try to run daily at midnight and run immediately after login in case of a miss\. But you edit the service to make it run whenever you want by using a cron alike syntax\.
+.RS
+.PP
+.nf
+$ systemctl \-\-user edit arbie\.timer
+.fi
+.RE
+.PP
+More information about that on Arch Wiki: Systemd/Timers[38]
+.sp
+[38] https://wiki\.archlinux\.org/index\.php/Systemd/Timers 
+.nf
+.fi
+
+
 .SS "Maintenance"
 
 .SB "Borg"
@@ -267,6 +298,28 @@ Mount an archive with FUSE
 .PP
 .nf
 $ borg mount ::archiveName mountPoint
+.fi
+.RE
+
+.SS "Extra"
+
+.SB "Vault"
+.PP
+Vault Guardian unlock/lock an encrypted at rest directory (a\.k\.a\. Vault)\.
+.RS
+.PP
+.nf
+$ vaultguard unlock
+.fi
+.RE
+.PP
+To use it create the file `\f[CR]$HOME/\.config/arbie/vault\.conf\fP` and configure following the template at `\f[CR]/usr/share/arbie\fP`\.
+.PP
+And initialize a gocryptfs files system in the chosen path
+.RS
+.PP
+.nf
+$ gocryptfs \-extpass pass \-extpass $secret_name \-init $vault_path
 .fi
 .RE
 

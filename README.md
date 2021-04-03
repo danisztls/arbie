@@ -32,9 +32,9 @@
 
 <!-- /TOC -->
 
-## About
 Automatic Robust Backup or A.R.B. is an archiving and synchronization tool with automation, encryption, redundancy and performance as it goals. It is fast to deploy, have sensible defaults and come with templates for common use cases.
 
+## About
 ### Goals
 - **Automation**: after configuration it should not require intervention.
 - **Encryption**: man-in-the-middle or server should not be able to read the data content.
@@ -61,7 +61,7 @@ Automatic Robust Backup or A.R.B. is an archiving and synchronization tool with 
 
 ## Install
 ### Globally
-If you're in an Arch based distro, install with an AUR helper like [paru](https://github.com/Morganamilo/paru) or build manually the included PKGBUILD.
+If you're in an Arch based distro, install with an AUR helper like [paru](https://github.com/Morganamilo/paru) or build manually the [PKGBUILD](https://aur.archlinux.org/packages/arbie-git/).
 
 If you're in another distro you can install via make.
 
