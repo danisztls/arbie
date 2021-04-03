@@ -18,9 +18,11 @@ install:
 	@echo -e '\033[1;32mInstalling program...\033[0m'
 	$(INSTALL_DIR) "$(DESTDIR)$(BINDIR)"
 	$(INSTALL_PROGRAM) arbie "$(DESTDIR)$(BINDIR)"
+	$(INSTALL_PROGRAM) vaultguard "$(DESTDIR)$(BINDIR)"
 	$(INSTALL_DIR) "$(DESTDIR)$(SHAREDIR)"
-	$(INSTALL_DATA) config "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL_DATA) arbie.conf "$(DESTDIR)$(SHAREDIR)"
 	$(INSTALL_DATA) ignore "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL_DATA) vault.conf "$(DESTDIR)$(SHAREDIR)"
 
 	@echo -e '\033[1;32mInstalling manpage...\033[0m'
 	$(INSTALL_DIR) "$(DESTDIR)$(MANDIR)"
@@ -34,7 +36,9 @@ install:
 uninstall:
 	@echo -e '\033[1;32mUninstalling program...\033[0m'
 	rm "$(DESTDIR)$(BINDIR)/arbie"
-	rm "$(DESTDIR)$(SHAREDIR)/config"
+	rm "$(DESTDIR)$(BINDIR)/vaultguard"
+	rm "$(DESTDIR)$(SHAREDIR)/arbie.conf"
+	rm "$(DESTDIR)$(SHAREDIR)/vault.conf"
 	rm "$(DESTDIR)$(SHAREDIR)/ignore"
 	rmdir "$(DESTDIR)$(SHAREDIR)"
 

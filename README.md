@@ -20,6 +20,8 @@
     * [Service](#service)
 * [Maintenance](#maintenance)
     * [Borg](#borg-1)
+* [Extra](#extra)
+    * [Vault](#vault)
 * [Caveats](#caveats)
     * [Security](#security)
     * [For each their own](#for-each-their-own)
@@ -157,6 +159,20 @@ $ borg list
 Mount an archive with FUSE
 ```shell
 $ borg mount ::archiveName mountPoint
+```
+## Extra
+### Vault
+Vault Guardian unlock/lock an encrypted at rest directory (a.k.a. Vault).
+
+```shell
+$ vaultguard unlock
+```
+
+To use it create the file `$HOME/.config/arbie/vault.conf` and configure following the template at `/usr/share/arbie`.
+
+And initialize a gocryptfs files system in the chosen path
+```shell
+$ gocryptfs -extpass pass -extpass $secret_name -init $vault_path
 ```
 
 ## Caveats

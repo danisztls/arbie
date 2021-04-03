@@ -21,7 +21,7 @@ pass_bin=${$(command -v pass):-$(command -v pass)} # prefer gopass
 [ $pass_bin ] || printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
 
 # Check for config file
-config="$HOME/.config/arbie/config"
+config="$XDG_CONFIG_HOME/arbie/arbie.conf"
 if ! [ -f "$config" ]; then # exit with config not found
     printf "<3>ERROR: %s\n" "config file not found!
 Templates can be found at /usr/share/arbie\n" && exit 1

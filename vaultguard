@@ -1,0 +1,43 @@
+#!/bin/bash
+# Mount or umount the encrypted directory "Vault" in plain mode.
+
+# Check for config file
+# Import $pass (name of secret), $src (path to gocryptfs fs), $dst (mountpoint for vault)
+config="$XDG_CONFIG_HOME/arbie/vault.conf"
+if ! [ -f "$config" ]; then # exit with config not found
+    printf "<3>ERROR: %s\n" "config file not found!" && exit 1
+else
+    # shellcheck disable=SC1090
+    source "$config"
+fi
+
+# Check if source is valid
+if [ -n "$(find "$src" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
+    printf "<3>ERROR: %s\n" "Source directory not found or empty!" && exit 1
+fi
+
+# Check if pass or gopass is installed
+pass_bin=${$(command -v pass):-$(command -v pass)} # prefer gopass
+[ $pass_bin ] || printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
+
+_unlock() {
+    if [ -z "$( ls -A "$dst" )" ]; then
+        gocryptfs -extpass "$pass_bin" -extpass "$pass" "$src" "$dst"
+    else
+        printf "<3>ERROR: %s\n" "Mount target is not empty!" && return 1
+    fi
+}
+
+_lock() {
+    fusermount -u "$dst" && echo "All clean!"
+}
+
+_help() {
+    printf "Options are 'lock' or 'unlock'.\n" && exit 1
+}
+
+case $1 in
+    unlock) _unlock;;
+    lock) _lock;;
+    *) _help;;
+esac
