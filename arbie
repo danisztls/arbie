@@ -2,10 +2,7 @@
 # A.R.B. Automatic Robust Backup
 
 # DEBUGGING
-# set -e # exit when anything 'fails'
-# Problems:
-#   - Borg return 1 when archive name already exist (intended to avoid duplicates);
-#     be read protected and ARB is running as user.
+set -e # exit when anything 'fails'
 
 # ENVIRONMENT
 # Check for dependencies
