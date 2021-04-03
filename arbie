@@ -5,7 +5,6 @@
 # set -e # exit when anything 'fails'
 # Problems:
 #   - Borg return 1 when archive name already exist (intended to avoid duplicates);
-#   - Rsync return 1 when some files can't be acessed (acceptable behavior as some files should
 #     be read protected and ARB is running as user.
 
 # ENVIRONMENT
@@ -146,7 +145,7 @@ archiveSys() {
 	mkdir -p "$output" # make dir if inexistent
 	pacman -Qqen > "$output/pkglist.txt" # export non-local pkg list
 	pacman -Qqem > "$output/pkglist-local.txt" # export local pkg list
-	export CVSIGNORE="$exclude" && rsync -qaH --delete -C /etc/ "$output/etc/" # sync /etc
+	export CVSIGNORE="$exclude" && rsync -qaH --delete --ignore-errors -C /etc/ "$output/etc/" # sync /etc
 	git -C "$output" add -A && git -C "$output" commit -m "$(date +%Y-%m-%d)" # archive changes in git
 }
 
