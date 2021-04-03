@@ -48,7 +48,7 @@ umountCrypt() {
     mount="$tmp/$name"
 	([ -d "$mount" ] && fusermount -uz "$mount") || # try to unmount if it exists
     (printf "<3>ERROR: %s\n" "unmounting $name failed"; return 1) # print and return error if it fails 
-	[ -n "$(ls -A "$mount")" ] || rm -r "$mount" # remove dir if empty
+    [ -n "$(find "$mount" -maxdepth 0 -type d -empty 2>/dev/null)" ] && rm -r "$mount" # remove dir if empty
 }
 
 mountCrypt() {
@@ -69,7 +69,7 @@ mountCrypt() {
     fi
 
     mount="$tmp/$name"
-	if [ -d "$mount" ] && [[ -n "$(ls -A "$mount")" ]]; then # if mount exists and is not empty
+	if [ -d "$mount" ] && [ -z "$(find "$mount" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then # if mount exists and is not empty
         printf "<4>WARNING: %s\n" "$name is already mounted, unmounting..."
         (umountCrypt -n "$name" && sleep 2) || return 1 # unmount if already mounted
     fi
