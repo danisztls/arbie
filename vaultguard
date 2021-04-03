@@ -11,6 +11,12 @@ else
     source "$config"
 fi
 
+# Check if all variables were sourced
+# shellcheck disable=SC2154
+if ! [ "$src" ] && [ "$dst" ] && [ "$pass" ]; then
+    printf "ERROR: %s\n" "Check your configuration!" && exit 1
+fi
+
 # Check if source is valid
 if [ -n "$(find "$src" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
     printf "ERROR: %s\n" "Source directory not found or empty!" && exit 1
