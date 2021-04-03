@@ -10,8 +10,8 @@
 
 # ENVIRONMENT
 # Check for dependencies
-arbie_deps=(borg gocryptfs rclone rsync git)
-for dep in "${arb_deps[@]}"; do
+deps=(borg gocryptfs rclone rsync git)
+for dep in "${deps[@]}"; do
     if ! [[ $(command -v "$dep") ]]; then
         printf "<3>ERROR: %s\n" "$dep not found. Missing required!" && exit 1
     fi
@@ -20,8 +20,15 @@ done
 pass_bin=${$(command -v pass):-$(command -v pass)} # prefer gopass
 [ $pass_bin ] || printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
 
+# Check for config file
+config="$HOME/.config/arbie/config"
+if ! [ -f "$config" ]; then # exit with config not found
+    printf "<3>ERROR: %s\n" "config file not found!
+Templates can be found at /usr/share/arbie\n" && exit 1
+fi
+
 # Dir for temporary stuff
-arbie_tmp=/run/user/$(id -u)/arbie
+tmp=/run/user/$(id -u)/arbie
 
 # LIB
 umountCrypt() {
@@ -38,7 +45,7 @@ umountCrypt() {
         printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
-    mount="$arbie_tmp/$name"
+    mount="$tmp/$name"
 	([ -d "$mount" ] && fusermount -uz "$mount") || # try to unmount if it exists
     (printf "<3>ERROR: %s\n" "unmounting $name failed"; return 1) # print and return error if it fails 
 	[ -n "$(ls -A "$mount")" ] || rm -r "$mount" # remove dir if empty
@@ -61,7 +68,7 @@ mountCrypt() {
         printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
-    mount="$arbie_tmp/$name"
+    mount="$tmp/$name"
 	if [ -d "$mount" ] && [[ -n "$(ls -A "$mount")" ]]; then # if mount exists and is not empty
         printf "<4>WARNING: %s\n" "$name is already mounted, unmounting..."
         (umountCrypt -n "$name" && sleep 2) || return 1 # unmount if already mounted
@@ -91,7 +98,7 @@ syncDisk() {
         printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
 
-	rsync -a --delete "${input:-$arbie_tmp/$name}/" "$output/" # assign value to $input with not set
+	rsync -a --delete "${input:-$tmp/$name}/" "$output/" # assign value to $input with not set
 }
 
 syncCloud() {
@@ -113,7 +120,7 @@ syncCloud() {
     for stream in "${streams[@]}"; do
         printf "<5>NOTICE: %s\n" "syncing $name to $stream"
         rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 \
-        "${input:-$arbie_tmp/$name}/" "$stream:$name/" # assign value to $input with not set 
+        "${input:-$tmp/$name}/" "$stream:$name/" # assign value to $input with not set 
     done
 }
 
@@ -199,7 +206,7 @@ ctrl_c() {
     kill -15 "$!" && sleep 5 && sync # send SIGTERM to child process
 
     # loop through existent dirs and try to umount/rm them
-    mapfile -t mounts < <(fd --type d --max-depth 1 --base-directory "$arb_tmp")
+    mapfile -t mounts < <(fd --type d --max-depth 1 --base-directory "$tmp")
     for name in "${mounts[@]}"; do
         umountCrypt -n "$name"
     done
@@ -215,11 +222,5 @@ decorate syncCloud
 decorate archiveSys
 decorate archiveBorg
 
-# Source variables and commands from config file
-config="$HOME/.config/arbie/config"
-if [ -f "$config" ]; then # exit with config not found
-    source "$config"
-else
-    printf "<3>ERROR: %s\n" "config file not found!"
-    exit 1
-fi
+# Source variables and commands
+source "$config"
