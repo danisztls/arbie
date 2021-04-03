@@ -1,7 +1,5 @@
 # THIS IS ONLY A TEMPLATE
-
-sh:/home/*/.cache
-sh:**/CacheStorage
+sh:**/.cache
 sh:**/CacheStorage
 sh:**/node_modules
 sh:**/vendor
@@ -9,5 +7,21 @@ sh:**/blob_storage
 sh:**/Cache
 sh:**/CachedData
 sh:**/CachedExtensions
-sh:**/Code Cache
+sh:**/Code \Cache
 sh:**/GPUCache
+sh:/home/*/.archive/full
+sh:/home/*/.archive/lite
+sh:/home/*/.config/chromium/**/Service\ Worker/
+sh:/home/*/.local/lib
+sh:/home/*/.local/share/cargo
+sh:/home/*/.local/share/gem
+sh:/home/*/.local/share/go
+sh:/home/*/.local/share/npm
+sh:/home/*/.local/share/Steam
+sh:/home/*/.local/share/tracker
+sh:/home/*/.local/share/Trash
+sh:/home/*/.steampath
+sh:/home/*/.steampid
+sh:/home/*/.wine
+sh:/home/*/Vault
+
