@@ -17,8 +17,10 @@ if [ -n "$(find "$src" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then
 fi
 
 # Check if pass or gopass is installed
-pass_bin=${$(command -v pass):-$(command -v pass)} # prefer gopass
-[ $pass_bin ] || printf "ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
+
+pass_bin=$(command -v pass)
+pass_bin=${pass_bin:-$(command -v pass)} # prefer gopass
+[ "$pass_bin" ] || printf "ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
 
 _unlock() {
     if [ -z "$( ls -A "$dst" )" ]; then

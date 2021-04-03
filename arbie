@@ -17,8 +17,9 @@ for dep in "${deps[@]}"; do
     fi
 done
 
-pass_bin=${$(command -v pass):-$(command -v pass)} # prefer gopass
-[ $pass_bin ] || printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
+pass_bin=$(command -v pass)
+pass_bin=${pass_bin:-$(command -v pass)} # prefer gopass
+[ "$pass_bin" ] || printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
 
 # Check for config file
 config="$XDG_CONFIG_HOME/arbie/arbie.conf"
