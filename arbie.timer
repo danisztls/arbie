@@ -3,7 +3,9 @@ Description=Automatic Robust Backup
 
 [Timer]
 OnCalendar=daily
-#OnCalendar=*-*-* 12:00:00
+# OnCalendar=DayOfWeek Year-Month-Day Hour:Minute:Second 
+# OnCalendar=*-*-* 12:00:00 # daily at noon
+# OnCalendar=Sat *-*-1..7 # 18:00:00 # 1st saturday of every month 
 Persistent=true
 
 [Install]

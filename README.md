@@ -10,12 +10,14 @@
     * [Globally](#globally)
     * [Locally](#locally)
 * [Configure](#configure)
-* [Init](#init)
-    * [Pass](#pass)
-    * [System](#system)
-    * [Borg](#borg)
-    * [Gocryptfs](#gocryptfs)
-    * [Rclone](#rclone)
+    * [Pipelines](#pipelines)
+    * [Init](#init)
+        * [Pass](#pass)
+        * [System](#system)
+        * [Borg](#borg)
+        * [Gocryptfs](#gocryptfs)
+        * [Rclone](#rclone)
+    * [Service](#service)
 * [Maintenance](#maintenance)
     * [Borg](#borg-1)
 * [Caveats](#caveats)
@@ -73,12 +75,13 @@ $ ./setup install
 ```
 
 ## Configure
+### Pipelines
 Edit `.config/arbie/config` to set up pipelines. Instructions and examples included in the file.
 
-## Init
+### Init
 Some of the tools require manual initialization or configuration. In the future there will be a tool to partially automate those. 
 
-### Pass
+#### Pass
 Init a password repository
 ```shell
 $ gopass setup
@@ -96,31 +99,44 @@ $ pass insert $secret_name
 ```
 *Note: They will be needed later for encryption.* 
 
-### System
+#### System
 Init Git in System repository
 ```shell
 $ git -C $repo_path init
 ```
 
-### Borg
+#### Borg
 Init Borg repository
 ```shell
 $borg init -e none $repo_path
 ```
 *Note: Encryption is done by gocryptfs.*
 
-### Gocryptfs
+#### Gocryptfs
 Init reverse mode encryption in a dir
 ```shell
 $ gocryptfs -extpass pass -extpass $secret_name -init -reverse $repo_path
 ```
 *Note: Reverse mode encryption mount plain dir and files as encrypted files with encrypted dir names which is ideal for storing on the cloud.*
 
-### Rclone
+#### Rclone
 Configure streams
 ```shell
 $ rclone config
 ```
+### Service
+Enable the systemd timer as user
+```shell
+$ systemctl --user enable arbie.timer
+```
+
+By default it will try to run daily at midnight and run immediately after login in case of a miss. But you edit the service to make it run whenever you want by using a cron alike syntax.
+
+```shell
+$ systemctl --user edit arbie.timer
+```
+
+More information about that on [Arch Wiki: Systemd/Timers](https://wiki.archlinux.org/index.php/Systemd/Timers)
 
 ## Maintenance
 ### Borg
