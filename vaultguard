@@ -24,9 +24,11 @@ fi
 
 # Check if pass or gopass is installed
 
-pass_bin=$(command -v pass)
+pass_bin=$(command -v pass) # check for pass
 pass_bin=${pass_bin:-$(command -v pass)} # prefer gopass
-[ "$pass_bin" ] || printf "ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
+if ! [ "$pass_bin" ]; then # exit if no alternative is found
+    printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
+fi
 
 _unlock() {
     if [ -z "$( ls -A "$dst" )" ]; then
