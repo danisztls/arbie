@@ -73,7 +73,7 @@ $ ./setup install
 ```
 
 ## Configure
-Edit `.config/arb/config` to set up pipelines. Instructions and examples included in the file.
+Edit `.config/arbie/config` to set up pipelines. Instructions and examples included in the file.
 
 ## Init
 Some of the tools require manual initialization or configuration. In the future there will be a tool to partially automate those. 

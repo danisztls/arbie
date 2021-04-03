@@ -4,4 +4,4 @@ Wants=default.target
 
 [Service]
 Type=oneshot
-ExecStart=arb
+ExecStart=arbie

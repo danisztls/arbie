@@ -3,7 +3,7 @@
 # THIS IS ONLY A TEMPLATE
 
 # ENVIRONMENT
-config="$HOME/config/arb"
+config="$HOME/config/arbie"
 
 # System
 system_repo="$HOME/.archive/system"         # system repository
