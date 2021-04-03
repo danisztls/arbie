@@ -170,11 +170,11 @@ archiveBorg() {
     fi
 
     if ! [ $lite ]; then
-        borg create -s -x -C lz4 --exclude-from "$exclude_file" "::{user}-{now:%y-%m-%d}" "$input" # archive
+        borg create -s -x -C lz4 --exclude-from "$exclude_file" "::{user}-{now:%y-%m-%dT%H:%M:%S}" "$input" # archive
         borg prune --list --keep-daily=7 --keep-weekly=4 --keep-monthly=6 # purge old
     else
         borg create -s -x -C auto,lzma --exclude-from "$exclude_file" --chunker-params 10,23,16,4095 \
-"::{user}-{now:%y-%m-%d}" "$input" # higher compression and fine granularity
+"::{user}-{now:%y-%m-%dT%H:%M:%S}" "$input" # higher compression and fine granularity
         borg prune --list --keep-last=2
     fi
 }
