@@ -180,6 +180,7 @@ archiveBorg() {
 # Decorate
 _decorate() {
 # Decorator for logging
+# shellcheck disable=2086
     eval "
         _inner_$(typeset -f "$1")
         $1"'() {
