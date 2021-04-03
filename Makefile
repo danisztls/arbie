@@ -11,6 +11,9 @@ INSTALL_DIR = install -p -d
 INSTALL_PROGRAM = install -p -m755
 INSTALL_DATA = install -p -m644
 
+common/$(PROJECT):
+	@echo -e '\033[1;32mRun make install...\033[0m'
+
 install:
 	@echo -e '\033[1;32mInstalling program...\033[0m'
 	$(INSTALL_DIR) "$(DESTDIR)$(BINDIR)"
@@ -35,8 +38,8 @@ uninstall:
 	rm "$(DESTDIR)$(SHAREDIR)/ignore"
 	rmdir "$(DESTDIR)$(SHAREDIR)"
 
-	#@echo -e '\033[1;32mUninstalling manpage...\033[0m'
-	#rm -f "$(DESTDIR)$(MANDIR)/arb.1"
+	@echo -e '\033[1;32mUninstalling manpage...\033[0m'
+	rm -f "$(DESTDIR)$(MANDIR)/arb.1"
 
 	@echo -e '\033[1;32mUninstalling systemd files...\033[0m'
 	rm "$(DESTDIR)$(INITDIR_SYSTEMD)/arb.service"
