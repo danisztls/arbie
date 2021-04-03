@@ -1,32 +1,63 @@
 #!/bin/bash
 # A.R.B. Configuration File
-# THIS IS ONLY A TEMPLATE
 
 # ENVIRONMENT
 config="$HOME/config/arbie"
 
-# System
-system_repo="$HOME/.archive/system"         # system repository
-system_exclude="audisp brlapi.key ca-certificates crypttab default/useradd gshadow* iptables libaudit.conf mtab NetworkManager/system-connections pacman.d/gnupg polkit-1 .pwd.lock shadow* sudoers sudoers.d ufw"              # system exclude list
+# THIS IS A TEMPLATE
+# UNCOMMENT AND MODIFY BELLOW
 
-# Home
-home_repo="$HOME/.archive/home"             # borg repository
-home_exclude="$config/home.ignore"          # borg exclude file
-home_pass="home"                            # gocryptfs password
-home_rsync="/mnt/backup/name"               # rsync destination dir
-home_rclone=(nextcloud onedrive amazons3)   # rclone destination streams
+# SYSTEM
+# Archive /etc and list of installed packages (Pacman) to a git repository.
+# Protected files as /etc/shadow/ and SSLs will be ignored due to exclusion
+# or lack of permissions unless they wre wrongly set.
 
-# TASKS
-# System Archive
-archiveSys -o "$system_repo" -e "$system_exclude"
+#system_repo="$HOME/.archive/system"                      # repository
+#system_exclude=".pwd.lock audisp audisp-remote.conf brlapi.key ca-certificates crypttab default/useradd docker/key.json gshadow* iptables libaudit.conf mtab NetworkManager/system-connections pacman.d/gnupg polkit-1 ppp/*secrets radicale/users rkhunter.conf shadow* ssh_host*key sudoers sudoers.d ufw zos-remote.conf" # exclude list
 
-# Borg Archive
-archiveBorg -n "home" -i "$HOME" -o "$home_repo" -e "$home_exclude"
+#archiveSys -o "$system_repo" -e "$system_exclude"        # archiving
 
-# Repo Sync to Disk
-syncDisk -n "home" -i "$home_repo" -o "$home_rsync"
+# VAULT
+# Sync an encrypted at rest directory, a safe vault, to local and cloud storage.
 
-# Repo Sync to Cloud
-mountCrypt -n "home" -i "$home_repo" -p "$home_pass" || exit 1
-syncCloud -n "home" -s "$home_rclone"
-umountCrypt -n "home"
+#vault_repo="$HOME/.archive/vault"                        # repository
+#vault_rsync="/mnt/external_disk/vault"                         # destination dir
+#vault_rclone=(nextcloud onedrive amazons3)               # destination streams
+#
+#syncDisk -n "vault" -i "$vault_repo" -o "$vault_rsync"   # local streaming
+#syncCloud -n "vault" -i "$vault_repo" -s "$vault_rclone" # cloud streaming
+
+# HOME
+# Archive the user home directory using Borg, online encrypt it and
+# sync to local and cloud storage.
+# Keep one archive for each month for the last 6 months.
+# Keep one archive per week for the last month.
+# Keep one archive per day for the last week.
+
+#home_repo="$HOME/.archive/home"             # repository
+#home_exclude="$config/home.ignore"          # exclude file
+#home_pass="home"                            # gocryptfs password
+#home_rsync="/mnt/external_disk/name"               # destination dir
+#home_rclone=(dropbox)                       # destination streams
+
+#archiveBorg -n "home" -i "$HOME" -o "$home_repo" -e "$home_exclude" # archiving
+#mountCrypt -n "home" -i "$home_repo" -p "$home_pass" || exit 1      # online encryption
+#syncDisk -n "home" -i "$home_repo" -o "$home_rsync"                 # local streaming 
+#syncCloud -n "home" -s "$home_rclone"                               # cloud streaming
+#umountCrypt -n "home"                                               # online encryption (close)
+
+# HOME LITE
+# Do the same as above but do best-effort to save space and bandwith.
+# Increase chunk granularity to reduce resending what has not changed (create overhead).
+# Use stronger (slower) encryption. Save only the two last daily archives.
+# Preferably the user should use stricter exclusion patterns.
+
+#lite_repo="$HOME/.archive/lite"             # borg repository
+#lite_exclude="$config/lite.ignore"          # borg exclude file
+#lite_pass="lite"                            # gocryptfs password
+#lite_rclone=(dropbox)                       # rclone destination stream
+
+#archiveBorg -n "lite" -i "$HOME" -o "$lite_repo" -e "$lite_exclude" -l
+#mountCrypt -n "lite" -i "$lite_repo" -p "$lite_pass" || exit 1
+#syncCloud -n "lite" -s "$lite_rclone"
+#umountCrypt -n "lite"
