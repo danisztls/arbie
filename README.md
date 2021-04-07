@@ -34,6 +34,8 @@
 
 Automatic Robust Backup or A.R.B. is an archiving and synchronization tool with automation, encryption, redundancy and performance as it goals. It is fast to deploy, have sensible defaults and come with templates for common use cases.
 
+[![GitHub Super-Linter](https://github.com/lbcnz/arbie/workflows/Lint%20Code%20Base/badge.svg)](https://github.com/marketplace/actions/super-linter)
+
 ## About
 ### Goals
 - **Automation**: after configuration it should not require intervention.
