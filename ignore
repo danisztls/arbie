@@ -1,27 +1,98 @@
-# THIS IS ONLY A TEMPLATE
-sh:**/.cache
-sh:**/CacheStorage
-sh:**/node_modules
-sh:**/vendor
+# THIS IS A TEMPLATE
+
+# Check Github templates for many specific environments
+# https://github.com/github/gitignore/ 
+
+# CUSTOM
+# ------
+# ADD YOUR OWN
+# ...
+
+# GENERAL 
+# -------
+# Cache
 sh:**/blob_storage
+sh:**/.cache*
+sh:**/cache-*
+sh:**/_cache
 sh:**/Cache
 sh:**/CachedData
 sh:**/CachedExtensions
+sh:**/CacheStorage
 sh:**/Code \Cache
 sh:**/GPUCache
-sh:/home/*/.archive/full
-sh:/home/*/.archive/lite
-sh:/home/*/.config/chromium/**/Service\ Worker/
-sh:/home/*/.local/lib
-sh:/home/*/.local/share/cargo
-sh:/home/*/.local/share/gem
-sh:/home/*/.local/share/go
-sh:/home/*/.local/share/npm
-sh:/home/*/.local/share/Steam
-sh:/home/*/.local/share/tracker
+sh:**/tmp
+sh:**/vendor
+
+# Linux
 sh:/home/*/.local/share/Trash
+sh:**/.Trash-*
+sh:/home/*/.makepkg
+
+# Version Control
+sh:**/.git
+sh:**/.bzr
+sh:**/.svn
+
+# LANGS
+# -----
+sh:/home/*/.local/lib
+
+# Ruby
+sh:/home/*/.local/share/gem
+sh:**/gems/
+sh:**/*.gem
+sh:**/*.rbc
+sh:**/.bundle/
+sh:**/vendor/bundle
+
+# Node
+sh:/home/*/.local/share/npm
+sh:**/node_modules/
+sh:**/jspm_packages/
+sh:**/web_modules/
+sh:**/build/Release
+sh:**/*.tsbuildinfo
+sh:**/.npm
+sh:**/.eslintcache
+
+# Python
+sh:**/__pycache__/
+sh:**/__pypackages__/
+sh:**/site_packages/
+
+# Rust
+sh:/home/*/.rustup
+sh:/home/*/.local/share/cargo
+
+# Go
+sh:/home/*/.local/share/go
+
+# Java
+sh:/home/*/.sbt
+
+# DESKTOP
+# ----
+# Browser
+sh:/home/*/.config/BraveSoftware/**/Service\ Worker/
+sh:/home/*/.config/chrome/**/Service\ Worker/
+sh:/home/*/.config/chromium/**/Service\ Worker/
+sh:/home/*/.config/Electron
+sh:/home/*/.config/Ferdi/Partitions
+
+# Crypto
+sh:/home/*/.local/share/electrum/blockchain_headers
+
+# Gnome
+sh:/home/*/.local/share/tracker
+
+# Games
+sh:/home/*/.config/unity3d
+sh:/home/*/.config/discord/0.*
+sh:/home/*/.local/share/Steam
 sh:/home/*/.steampath
 sh:/home/*/.steampid
 sh:/home/*/.wine
-sh:/home/*/Vault
 
+# Misc
+sh:/home/*/.config/spotify/User Data/WidevineCDM
