@@ -145,7 +145,7 @@ archiveSys() {
 	pacman -Qqen > "$output/pkglist.txt" # export non-local pkg list
 	pacman -Qqem > "$output/pkglist-local.txt" # export local pkg list
 	export CVSIGNORE="$exclude" && rsync -qaH --delete --ignore-errors -C /etc/ "$output/etc/" # sync /etc
-	git -C "$output" add -A && git -C "$output" commit -m "$(date +%Y-%m-%d)" ||: # archive changes in git
+  (git -C "$output" add -A && git -C "$output" commit -m "$(date +%Y-%m-%d)") ||: # archive changes in git
 }
 
 archiveBorg() {
