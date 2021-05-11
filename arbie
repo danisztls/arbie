@@ -108,11 +108,12 @@ syncCloud() {
         case $opt in
             n) name=$OPTARG;;
             i) input=$OPTARG;; # optional
-            s) streams=$OPTARG;;
+            s) read -r -a streams <<< "$OPTARG";;
             *) printf "<3>ERROR: %s\n" "Something is wrong!";;
         esac
     done
-    
+   
+    # shellcheck disable=SC2128
     if ! [ "$name" ] && [ "$streams" ]; then
         printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
     fi
