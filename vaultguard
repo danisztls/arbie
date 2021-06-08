@@ -47,7 +47,7 @@ _help() {
 }
 
 case $1 in
-    unlock) _unlock;;
-    lock) _lock;;
+    u|unlock) _unlock;;
+    l|lock) _lock;;
     *) _help;;
 esac
