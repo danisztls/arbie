@@ -12,8 +12,8 @@ fi
 
 # INSTALL
 if [ "$1" == install ]; then
-    mkdir -p "$bin" && cp "$src/arbie" "$src/vaultguard" "$bin/" # copy bin
-    mkdir -p "$config" && cp -n "$src/arbie.conf" "$src/ignore" "$src/vault.conf" "$config/" # copy data (don't overwrite)
+    mkdir -p "$bin" && cp "$src/arbie" "$bin/" # copy bin
+    mkdir -p "$config" && cp -n "$src/arbie.conf" "$src/ignore" "$config/" # copy data (don't overwrite)
     mkdir -p "$systemd" && cp "$src/arbie.service" "$src/arbie.timer" "$systemd/"
     sed -i 's#ExecStart=#ExecStart=%h/.local/bin/#' "$systemd/arbie.service"
     systemctl --user daemon-reload # setup systemd
@@ -22,7 +22,7 @@ fi
 
 # UNINSTALL
 if [ "$1" == unistall ]; then
-    rm -f "$bin/arbie" "$bin/vaultguard" # remove bins
+    rm -f "$bin/arbie" # remove bin
     systemctl --user stop arb && systemctl --user disable arbie && systemctl --user disable arbie.timer # disable service
     rm -f "$systemd/arbie.service" && rm -f "$systemd/arbie.timer" && systemctl --user daemon-reload # remove service
     echo "Done!" && exit 0
