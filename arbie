@@ -18,17 +18,16 @@ for dep in "${deps[@]}"; do
     fi
 done
 
-pass_bin=$(command -v pass) # check for pass
-pass_bin=${pass_bin:-$(command -v pass)} # prefer gopass
-if ! [ "$pass_bin" ]; then # exit if no alternative is found
+pass_bin=$(command -v gopass) # check for gopass
+pass_bin=${pass_bin:-$(command -v pass)} # fallback for pass
+if ! [ "$pass_bin" ]; then # exit if none
     printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
 fi
 
 # Check for config file
 config="$XDG_CONFIG_HOME/arbie/arbie.conf"
 if ! [ -f "$config" ]; then # exit with config not found
-    printf "<3>ERROR: %s\n" "config file not found!
-Templates can be found at /usr/share/arbie\n" && exit 1
+    printf "<3>ERROR: %s\n" "config file not found! Templates can be found at /usr/share/arbie" && exit 1
 fi
 
 # Dir for temporary stuff
