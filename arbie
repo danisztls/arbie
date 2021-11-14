@@ -1,148 +1,146 @@
 #!/usr/bin/env bash
 #
 # Automatic Robust Backup
-
+#
 # @author: Daniel Souza <me@posix.dev.br>
 # @license: MIT
 
-# DEBUGGING
+# Debugging
 # set -e # exit when anything 'fails'
 # use ||: at end of line to ignore errors
 
-# ENVIRONMENT
 # Check for dependencies
 deps=(borg gocryptfs rclone rsync git)
 for dep in "${deps[@]}"; do
-    if ! [[ $(command -v "$dep") ]]; then
-        printf "<3>ERROR: %s\n" "$dep not found. Missing required!" && exit 1
-    fi
+  if ! [[ $(command -v "$dep") ]]; then
+      printf "<3>ERROR: %s\n" "$dep not found. Missing required!" && exit 1
+  fi
 done
 
 pass_bin=$(command -v gopass) # check for gopass
 pass_bin=${pass_bin:-$(command -v pass)} # fallback for pass
 if ! [ "$pass_bin" ]; then # exit if none
-    printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
+  printf "<3>ERROR: %s\n" "gopass or pass not found. Missing required!" && exit 1
 fi
 
 # Check for config file
 config="$XDG_CONFIG_HOME/arbie/arbie.conf"
 if ! [ -f "$config" ]; then # exit with config not found
-    printf "<3>ERROR: %s\n" "config file not found! Templates can be found at /usr/share/arbie" && exit 1
+  printf "<3>ERROR: %s\n" "config file not found! Templates can be found at /usr/share/arbie" && exit 1
 fi
 
 # Dir for temporary stuff
 tmp=/run/user/$(id -u)/arbie
 
-# LIB
-umountCrypt() {
 # Unmount a Gocryptfs directory
-    local OPTIND name mount
-    while getopts "n:" opt; do
-        case $opt in
-            n) name=$OPTARG;;
-            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-        esac
-    done
+umountCrypt() {
+  local OPTIND name mount
+  while getopts "n:" opt; do
+    case $opt in
+      n) name=$OPTARG;;
+      *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+    esac
+  done
 
-    if ! [ "$name" ]; then
-        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
-    fi
+  if ! [ "$name" ]; then
+    printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
+  fi
 
-    mount="$tmp/$name"
-	([ -d "$mount" ] && fusermount -uz "$mount") || # try to unmount if it exists
-    (printf "<3>ERROR: %s\n" "unmounting $name failed"; return 1) # print and return error if it fails 
-    [ -n "$(find "$mount" -maxdepth 0 -type d -empty 2>/dev/null)" ] && rm -r "$mount" # remove dir if empty
+  mount="$tmp/$name"
+  ([ -d "$mount" ] && fusermount -uz "$mount") || # try to unmount if it exists
+  (printf "<3>ERROR: %s\n" "unmounting $name failed"; return 1) # print and return error if it fails
+  [ -n "$(find "$mount" -maxdepth 0 -type d -empty 2>/dev/null)" ] && rm -r "$mount" # remove dir if empty
 }
 
-mountCrypt() {
 # Mount a Gocryptfs directory
-    local OPTIND name input pass exclude_file mount
-    while getopts "n:i:p:e:" opt; do
-        case $opt in
-            n) name=$OPTARG;;
-            i) input=$OPTARG;;
-            p) pass=$OPTARG;;
-            e) exclude_file=$OPTARG;; #optional
-            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-        esac
-    done
+mountCrypt() {
+  local OPTIND name input pass exclude_file mount
+  while getopts "n:i:p:e:" opt; do
+    case $opt in
+      n) name=$OPTARG;;
+      i) input=$OPTARG;;
+      p) pass=$OPTARG;;
+      e) exclude_file=$OPTARG;; #optional
+      *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+    esac
+  done
 
-    if ! [ "$name" ] && [ "$input" ] && [ "$pass" ]; then
-        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
-    fi
+  if ! [ "$name" ] && [ "$input" ] && [ "$pass" ]; then
+    printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
+  fi
 
-    mount="$tmp/$name"
-	if [ -d "$mount" ] && [ -z "$(find "$mount" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then # if mount exists and is not empty
-        printf "<4>WARNING: %s\n" "$name is already mounted, unmounting..."
-        (umountCrypt -n "$name" && sleep 2) || return 1 # unmount if already mounted
-    fi
-	
-    if ! [ -d "$input" ]; then # check if input dir exists
-        printf "<3>ERROR: %s\n" "$input does not exist!" && return 1
-    fi
-    
-    mkdir -p "$mount" # create mountpoint dir if inexistent
-	gocryptfs -extpass "$pass_bin" -extpass "$pass" ${exclude_file:+-exclude-from "$exclude_file"} -reverse "$input" "$mount"
+  mount="$tmp/$name"
+  if [ -d "$mount" ] && [ -z "$(find "$mount" -maxdepth 0 -type d -empty 2>/dev/null)" ]; then # if mount exists and is not empty
+    printf "<4>WARNING: %s\n" "$name is already mounted, unmounting..."
+    (umountCrypt -n "$name" && sleep 2) || return 1 # unmount if already mounted
+  fi
+
+  if ! [ -d "$input" ]; then # check if input dir exists
+    printf "<3>ERROR: %s\n" "$input does not exist!" && return 1
+  fi
+
+  mkdir -p "$mount" # create mountpoint dir if inexistent
+  gocryptfs -extpass "$pass_bin" -extpass "$pass" ${exclude_file:+-exclude-from "$exclude_file"} -reverse "$input" "$mount"
 }
 
-syncDisk() {
 # Sync a dir to disk
-    local OPTIND name input output
-    while getopts "n:i:o:" opt; do
-        case $opt in
-            n) name=$OPTARG;;
-            i) input=$OPTARG;; # optional
-            o) output=$OPTARG;;
-            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-        esac
-    done
-    
-    if ! [ "$name" ] && [ "$output" ]; then
-        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
-    fi
+syncDisk() {
+  local OPTIND name input output
+  while getopts "n:i:o:" opt; do
+    case $opt in
+      n) name=$OPTARG;;
+      i) input=$OPTARG;; # optional
+      o) output=$OPTARG;;
+      *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+    esac
+  done
+
+  if ! [ "$name" ] && [ "$output" ]; then
+    printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
+  fi
 
 	rsync -a --delete "${input:-$tmp/$name}/" "$output/" # assign value to $input with not set
 }
 
-syncCloud() {
 # Sync a dir to a cloud bucket
-    local OPTIND name input streams
-    while getopts "n:i:s:" opt; do
-        case $opt in
-            n) name=$OPTARG;;
-            i) input=$OPTARG;; # optional
-            s) read -r -a streams <<< "$OPTARG";;
-            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-        esac
-    done
-   
-    # shellcheck disable=SC2128
-    if ! [ "$name" ] && [ "$streams" ]; then
-        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
-    fi
+syncCloud() {
+  local OPTIND name input streams
+  while getopts "n:i:s:" opt; do
+    case $opt in
+      n) name=$OPTARG;;
+      i) input=$OPTARG;; # optional
+      s) read -r -a streams <<< "$OPTARG";;
+      *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+    esac
+  done
 
-    for stream in "${streams[@]}"; do
-        printf "<5>NOTICE: %s\n" "syncing $name to $stream"
-        rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 \
-        "${input:-$tmp/$name}/" "$stream:$name/" # assign value to $input with not set 
-    done
+  # shellcheck disable=SC2128
+  if ! [ "$name" ] && [ "$streams" ]; then
+    printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
+  fi
+
+  for stream in "${streams[@]}"; do
+    printf "<5>NOTICE: %s\n" "syncing $name to $stream"
+    rclone sync -u --use-server-modtime --skip-links --fast-list --max-backlog=-1 \
+    "${input:-$tmp/$name}/" "$stream:$name/" # assign value to $input with not set
+  done
 }
 
-archiveSys() {
 # Archive system confs
-    local OPTIND name output exclude
-    name="sys"
-    while getopts "o:e:" opt; do
-        case $opt in
-            o) output=$OPTARG;;
-            e) exclude=$OPTARG;;
-            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-        esac
-    done
-    
-    if ! [ "$output" ] && [ "$exclude" ]; then
-        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
-    fi
+archiveSys() {
+  local OPTIND name output exclude
+  name="sys"
+  while getopts "o:e:" opt; do
+    case $opt in
+      o) output=$OPTARG;;
+      e) exclude=$OPTARG;;
+      *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+    esac
+  done
+
+  if ! [ "$output" ] && [ "$exclude" ]; then
+    printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
+  fi
 
 	mkdir -p "$output" # make dir if inexistent
 	pacman -Qqen > "$output/pkglist.txt" # export non-local pkg list
@@ -151,74 +149,73 @@ archiveSys() {
   (git -C "$output" add -A && git -C "$output" commit -m "$(date +%Y-%m-%d)") ||: # archive changes in git
 }
 
-archiveBorg() {
 # Archive a dir with borg (default)
-    local OPTIND name input output exclude_file pass key lite
-    while getopts "n:i:o:e:p:k:l" opt; do
-        case $opt in
-            n) name=$OPTARG;;
-            i) input=$OPTARG;;
-            o) output=$OPTARG && export BORG_REPO="$output";;
-            e) exclude_file=$OPTARG;;
-            p) pass=$OPTARG && export BORG_PASSCOMMAND="$pass_bin $pass";; # optional
-            k) key=$OPTARG && export BORG_KEY_FILE="$key";; # optional
-            l) lite=1;; # optional
-            *) printf "<3>ERROR: %s\n" "Something is wrong!";;
-        esac
-    done
-    
-    if ! [ "$name" ] && [ "$input" ] && [ "$output" ] && [ "$exclude_file" ]; then
-        printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
-    fi
+archiveBorg() {
+  local OPTIND name input output exclude_file pass key lite
+  while getopts "n:i:o:e:p:k:l" opt; do
+    case $opt in
+      n) name=$OPTARG;;
+      i) input=$OPTARG;;
+      o) output=$OPTARG && export BORG_REPO="$output";;
+      e) exclude_file=$OPTARG;;
+      p) pass=$OPTARG && export BORG_PASSCOMMAND="$pass_bin $pass";; # optional
+      k) key=$OPTARG && export BORG_KEY_FILE="$key";; # optional
+      l) lite=1;; # optional
+      *) printf "<3>ERROR: %s\n" "Something is wrong!";;
+    esac
+  done
 
-    if ! [ $lite ]; then
-        borg create -s -x -C lz4 --exclude-from "$exclude_file" "::{user}-{now:%y-%m-%dT%H:%M:%S}" "$input" # archive
-        borg prune --list --keep-daily=7 --keep-weekly=4 --keep-monthly=6 # purge old
-    else
-        borg create -s -x -C auto,lzma --exclude-from "$exclude_file" --chunker-params 10,23,16,4095 \
+  if ! [ "$name" ] && [ "$input" ] && [ "$output" ] && [ "$exclude_file" ]; then
+    printf "<3>ERROR: %s\n" "Missing required arguments!" && return 1
+  fi
+
+  if ! [ $lite ]; then
+    borg create -s -x -C lz4 --exclude-from "$exclude_file" "::{user}-{now:%y-%m-%dT%H:%M:%S}" "$input" # archive
+    borg prune --list --keep-daily=7 --keep-weekly=4 --keep-monthly=6 # purge old
+  else
+    borg create -s -x -C auto,lzma --exclude-from "$exclude_file" --chunker-params 10,23,16,4095 \
 "::{user}-{now:%y-%m-%dT%H:%M:%S}" "$input" # higher compression and fine granularity
-        borg prune --list --keep-last=2
-    fi
+    borg prune --list --keep-last=2
+  fi
 }
 
-# Decorate
+# Logging decorator
+# TODO: Check for env and decorate w/ colors when not invoked by systemd.
 _decorate() {
-# Decorator for logging
 # shellcheck disable=2086
-    eval "
-        _inner_$(typeset -f "$1")
-        $1"'() {
-            printf >&2 "<5>NOTICE: %s\n" "'$1' started"
-            _inner_'$1' "$@"
-            local ret=$?
-            printf >&2 "<5>NOTICE: %s\n" "'$1' ended with status $ret"
-            return "$ret"
-        }'
+  eval "_inner_$(typeset -f "$1")
+  $1"'() {
+    printf >&2 "<5>NOTICE: %s\n" "'$1' started"
+    _inner_'$1' "$@"
+    local ret=$?
+    printf >&2 "<5>NOTICE: %s\n" "'$1' ended with status $ret"
+    return "$ret"
+  }'
 }
 
 # MAIN
 # Exit without doing anything if already being executed
-for pid in $(pidof -x arbie); do 
-    if [ "$pid" != $$ ]; then
-	    printf "<3>ERROR: %s\n" "program is already running with PID '$pid'!"
-        exit 1
-    fi
+for pid in $(pidof -x arbie); do
+  if [ "$pid" != $$ ]; then
+    printf "<3>ERROR: %s\n" "program is already running with PID '$pid'!"
+    exit 1
+  fi
 done
 
 # Trap ^C to allow forceful exit from child
-trap _ctrl_c INT 
+trap _ctrl_c INT
 _ctrl_c() {
-    kill -15 $! && sleep 5 && sync # send SIGTERM to child process
+  kill -15 $! && sleep 5 && sync # send SIGTERM to child process
 
-    # loop through existent dirs and try to umount/rm them
-    mapfile -t mounts < <(fd --type d --max-depth 1 --base-directory "$tmp")
-    for name in "${mounts[@]}"; do
-        umountCrypt -n "$name"
-    done
+  # loop through existent dirs and try to umount/rm them
+  mapfile -t mounts < <(fd --type d --max-depth 1 --base-directory "$tmp")
+  for name in "${mounts[@]}"; do
+      umountCrypt -n "$name"
+  done
 
-    [ "$mount" ] && umountCrypt -n "$mount" # unmount last mount point
-    printf "<3>ERROR: %s\n" "program with PID '$!' was manually terminated!"
-    exit 1
+  [ "$mount" ] && umountCrypt -n "$mount" # unmount last mount point
+  printf "<3>ERROR: %s\n" "program with PID '$!' was manually terminated!"
+  exit 1
 }
 
 # Decorate functions with logging
