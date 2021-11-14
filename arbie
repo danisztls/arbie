@@ -6,7 +6,7 @@
 # @license: MIT
 
 # DEBUGGING
-set -e # exit when anything 'fails'
+# set -e # exit when anything 'fails'
 # use ||: at end of line to ignore errors
 
 # ENVIRONMENT
