@@ -1,29 +1,28 @@
 #!/bin/bash
 # Install ARB to user home
-bin="$HOME/.local/bin"
-config="$XDG_CONFIG_HOME/arbie"
-systemd="$XDG_CONFIG_HOME/systemd/user"
+bin="${XDG_BIN_HOME:-${HOME}/.local/bin}"
+config="${XDG_CONFIG_HOME:-${HOME}/.config}"
 src=$(dirname "$(readlink -f "$0")") # absolute source files path
 
 # HELP
 if [ "$#" -ne 1 ]; then
-    echo "Options are install and uninstall." && exit 1
+  echo "Options are install and uninstall." && exit 1
 fi
 
 # INSTALL
 if [ "$1" == install ]; then
-    mkdir -p "$bin" && cp "$src/arbie" "$bin/" # copy bin
-    mkdir -p "$config" && cp -n "$src/arbie.conf" "$src/ignore" "$config/" # copy data (don't overwrite)
-    mkdir -p "$systemd" && cp "$src/arbie.service" "$src/arbie.timer" "$systemd/"
-    sed -i 's#ExecStart=#ExecStart=%h/.local/bin/#' "$systemd/arbie.service"
-    systemctl --user daemon-reload # setup systemd
-    echo "Done!" && exit 0
+  mkdir -p "$bin" && cp "$src/arbie" "$bin/"
+  mkdir -p "$config/arbie" && cp -n "$src/config" "$src/ignore" "$config/arbie/"
+  mkdir -p "$config/systemd/user" && cp "$src/arbie.service" "$src/arbie.timer" "$config/systemd/user/"
+  sed -i 's#ExecStart=#ExecStart=%h/.local/bin/#' "$config/systemd/user/arbie.service"
+  systemctl --user daemon-reload # setup systemd
+  echo "Done!" && exit 0
 fi
 
 # UNINSTALL
 if [ "$1" == unistall ]; then
-    rm -f "$bin/arbie" # remove bin
-    systemctl --user stop arb && systemctl --user disable arbie && systemctl --user disable arbie.timer # disable service
-    rm -f "$systemd/arbie.service" && rm -f "$systemd/arbie.timer" && systemctl --user daemon-reload # remove service
-    echo "Done!" && exit 0
+  rm -f "$bin/arbie" # remove bin
+  systemctl --user stop arb && systemctl --user disable arbie && systemctl --user disable arbie.timer # disable service
+  rm -f "$config/systemd/user/arbie.service" && rm -f "$config/systemd/user/arbie.timer" && systemctl --user daemon-reload # remove service
+  echo "Done!" && exit 0
 fi

@@ -19,7 +19,7 @@ install:
 	$(INSTALL_DIR) "$(DESTDIR)$(BINDIR)"
 	$(INSTALL_PROGRAM) arbie "$(DESTDIR)$(BINDIR)"
 	$(INSTALL_DIR) "$(DESTDIR)$(SHAREDIR)"
-	$(INSTALL_DATA) arbie.conf "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL_DATA) config "$(DESTDIR)$(SHAREDIR)"
 	$(INSTALL_DATA) ignore "$(DESTDIR)$(SHAREDIR)"
 
 	@echo -e '\033[1;32mInstalling manpage...\033[0m'
@@ -34,7 +34,7 @@ install:
 uninstall:
 	@echo -e '\033[1;32mUninstalling program...\033[0m'
 	rm "$(DESTDIR)$(BINDIR)/arbie"
-	rm "$(DESTDIR)$(SHAREDIR)/arbie.conf"
+	rm "$(DESTDIR)$(SHAREDIR)/config"
 	rm "$(DESTDIR)$(SHAREDIR)/ignore"
 	rmdir "$(DESTDIR)$(SHAREDIR)"
 
