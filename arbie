@@ -84,9 +84,9 @@ fi
 
 # Check config file
 if [ "$XDG_CONFIG_HOME" ]; then
-  config="$XDG_CONFIG_HOME/arbie/arbie.conf"
+  config="$XDG_CONFIG_HOME/arbie/config"
 else
-  config="$HOME/config/arbie/arbie.conf"
+  config="$HOME/config/arbie/config"
 fi
 
 if ! [ -f "$config" ]; then
