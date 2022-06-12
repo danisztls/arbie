@@ -24,7 +24,12 @@ if ! [ "$pass_bin" ]; then # exit if none
 fi
 
 # Check for config file
-config="$XDG_CONFIG_HOME/arbie/arbie.conf"
+if [ "$XDG_CONFIG_HOME" ]; then
+  config="$XDG_CONFIG_HOME/arbie/arbie.conf"
+else
+  config="$HOME/config/arbie/arbie.conf"
+fi
+
 if ! [ -f "$config" ]; then # exit with config not found
   printf "<3>ERROR: %s\n" "config file not found! Templates can be found at /usr/share/arbie" && exit 1
 fi
