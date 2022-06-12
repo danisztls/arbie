@@ -11,9 +11,6 @@ $ mandown MAN.md ARB > doc/arb.1
 Try to follow [manpage style guide](https://liw.fi/manpages/).
 
 ## ToDo 
-### Fix
-- Systemd service isn't working. It's failing to read config possible due to a change on how env work on systemd.
-
 ### Improve
 - Improve documentation to cover common tasks like initing borg/gocrypts, list, fsck, mounting.
 - Improve README to describe the program in a more direct/honest way. Arbie is a script to integrate and automate Borg, Gocryptfs and Rclone. Batteries includes.
