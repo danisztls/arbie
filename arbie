@@ -39,7 +39,7 @@ else
   debug="${muted}DEBUG: %s${reset}\n"
 fi
 
-# Function log decorator
+# Decorate functions with logging
 _decorate() {
   # shellcheck disable=2086
   eval "_inner_$(typeset -f "$1")
@@ -163,6 +163,7 @@ syncDisk() {
 
 	rsync -a --delete "${input:-$tmp/$name}/" "$output/" # assign value to $input with not set
 }
+_decorate syncDisk
 
 # Sync a directory to a rclone bucket
 syncCloud() {
@@ -187,6 +188,7 @@ syncCloud() {
     "${input:-$tmp/$name}/" "$stream:$name/" # assign value to $input with not set
   done
 }
+_decorate syncCloud
 
 # Archive a directory with Borg
 archiveBorg() {
@@ -219,6 +221,7 @@ archiveBorg() {
     borg compact
   fi
 }
+_decorate archiveBorg
 
 # MAIN
 # ----
@@ -239,12 +242,6 @@ _ctrl_c() {
   printf "$err" "program with PID '$pid' was manually terminated!"
   exit 1
 }
-
-# Decorate functions with logging
-_decorate syncDisk
-_decorate syncCloud
-_decorate archiveSys
-_decorate archiveBorg
 
 # Source variables and commands
 # shellcheck disable=1090
