@@ -83,7 +83,7 @@ if ! [ "$pass_bin" ]; then # exit if none
 fi
 
 # Check config file
-config="${XDG_CONFIG_HOME:-${HOME}}/arbie/config"
+config="${XDG_CONFIG_HOME:-${HOME}/config}/arbie/config"
 
 if ! [ -f "$config" ]; then
   printf "$err" "Config file not found, templates at '/usr/share/arbie/'" && exit 1
