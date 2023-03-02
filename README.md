@@ -9,8 +9,8 @@ Automatic Robust Backup or A.R.B. is an archiving and synchronization tool with 
   * [Dependencies](#dependencies)
   * [Features](#features)
 * [Install](#install)
-  * [Globally](#globally)
-  * [Locally](#locally)
+  * [Packages](#packages)
+  * [Make](#make)
 * [Configure](#configure)
   * [Pipelines](#pipelines)
   * [Init](#init)
@@ -58,20 +58,14 @@ Automatic Robust Backup or A.R.B. is an archiving and synchronization tool with 
 - Archive your personal files and whatever files you wish.
 
 ## Install
-### Globally
-If you're in an Arch based distro, install with an AUR helper like [paru](https://github.com/Morganamilo/paru) or build manually the [PKGBUILD](https://aur.archlinux.org/packages/arbie-git/).
+### Packages
+- [Arch Linux](https://aur.archlinux.org/packages/arbie-git/)
 
-If you're in another distro you can install via make.
+### Make 
 
 ```sh
 make
 make install
-```
-
-### Locally
-Installing locally may be advantageous in systems for which ARB isn't packaged or for users of [systemd-homed](https://wiki.archlinux.org/index.php/Systemd-homed) that share their home between systems.
-``` shell
-./setup install
 ```
 
 ## Configure
