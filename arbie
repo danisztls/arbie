@@ -32,7 +32,7 @@ else
   emerg="${red}EMERGENCY: %s${reset}\n"
   alert="${red}ALERT: %s${reset}\n"
   crit="${red}CRITICAL: %s${reset}\n"
-  error="${red}ERROR: %s${reset}\n"
+  err="${red}ERROR: %s${reset}\n"
   warning="${yellow}WARNING: %s${reset}\n"
   notice="${strong}NOTICE: %s${reset}\n"
   info="INFO: %s\n"
